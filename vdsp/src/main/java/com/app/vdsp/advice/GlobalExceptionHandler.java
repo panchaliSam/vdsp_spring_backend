@@ -9,13 +9,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    // Handle ResponseStatusExceptions
+
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorDto> handleBundleRefillException(ResponseStatusException exception) {
-        return ResponseEntity.status(exception.getStatusCode()).body(new ErrorDto(exception.getStatusCode().value(), exception.getReason()));
+    public ResponseEntity<ErrorDto> handleResponseStatusException(ResponseStatusException exception) {
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(new ErrorDto(exception.getStatusCode().value(), exception.getReason()));
     }
 
-    // Handle NullPointerException
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ErrorDto> handleNullPointerException() {
         return ResponseEntity
