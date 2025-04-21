@@ -17,8 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -34,37 +39,52 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto registerUser(UserDto userDto) {
+        log.info("Registering user with email: {}", userDto.getEmail());
+
         if (userRepository.existsByEmail(userDto.getEmail())) {
+            log.warn("Registration failed: Email {} is already in use", userDto.getEmail());
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
-        User user = modelMapper.map(userDto, User.class);
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        userRepository.save(user);
+        try {
+            User user = modelMapper.map(userDto, User.class);
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            userRepository.save(user);
 
-        return userDto;
+            log.info("User registered successfully with email: {}", userDto.getEmail());
+            return userDto;
+        } catch (Exception e) {
+            log.error("Error occurred during registration for email {}: {}", userDto.getEmail(), e.toString());
+            throw new RuntimeException("User registration failed", e);
+        }
     }
 
     @Override
     public TokenResponseDto loginUser(String email, String password) {
+        log.info("Attempting to log in user with email: {}", email);
+
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
             if (passwordEncoder.matches(password, user.getPassword())) {
+                log.info("Login successful for email: {}", email);
                 return TokenResponseDto.builder()
                         .accessToken(jwtService.generateToken(user))
                         .refreshToken(jwtService.generateRefreshToken(user))
                         .userDetails(user)
                         .build();
             } else {
+                log.warn("Login failed for email {}: Invalid password", email);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
             }
         }
 
+        log.warn("Login failed: User with email {} not found", email);
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
+
 
     @Override
     public UserDetailsService userDetailsService() {
@@ -74,7 +94,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUsers() {
-        return List.of();
+        try {
+            return userRepository.findAll();
+        } catch (Exception e) {
+            log.error("UserServiceImpl | getAllUsers | Exception: {}", e.toString());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
