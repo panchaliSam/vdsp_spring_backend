@@ -20,7 +20,7 @@ public class UserDto {
     @NotBlank(message = "Last name should not be blank")
     private String lastName;
     @NotBlank(message = "Password should not be blank")
-    @Size(min = 60)
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
     @NotBlank(message = "Email should not be blank")
     @Email(message = "Invalid email format")
