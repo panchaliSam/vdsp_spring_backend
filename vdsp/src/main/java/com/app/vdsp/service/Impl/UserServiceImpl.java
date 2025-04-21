@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -69,5 +70,25 @@ public class UserServiceImpl implements UserService {
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return List.of();
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return null;
+    }
+
+    @Override
+    public void UpdateUser(Long id, UserDto userDto) {
+
+    }
+
+    @Override
+    public void deleteUser(Long id, UserDto userDto) {
+
     }
 }
