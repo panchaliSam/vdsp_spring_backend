@@ -7,12 +7,10 @@ import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.utils.JWTService;
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,63 +19,55 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final JWTService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserDto registerUser(UserDto userDto) {
-        try {
-            if (userRepository.existsByEmail(userDto.getEmail())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-            }
-            User user = modelMapper.map(userDto, User.class);
-            userRepository.save(user);
-
-            return userDto;
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("UserServiceImpl | registerUser | Error: {}", e.getMessage(), e);
-            throw new RuntimeException("An error occurred during user registration", e);
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
+
+        User user = modelMapper.map(userDto, User.class);
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        userRepository.save(user);
+
+        return userDto;
     }
 
     @Override
     public TokenResponseDto loginUser(String email, String password) {
-        try{
-            Optional<User> user = userRepository.findByEmailAndPassword(email,password);
-            if(user.isPresent()){
-                return TokenResponseDto.builder().accessToken(jwtService.generateToken(user.get()))
-                        .refreshToken(jwtService.generateRefreshToken(user.get()))
-                        .userDetails(user.get())
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                return TokenResponseDto.builder()
+                        .accessToken(jwtService.generateToken(user))
+                        .refreshToken(jwtService.generateRefreshToken(user))
+                        .userDetails(user)
                         .build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
             }
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }catch (Exception e) {
-            if (e instanceof ResponseStatusException) {
-                throw (ResponseStatusException) e;
-            }
-            log.error("UserServiceImpl | userLogin | {}", e.toString());
-            throw new RuntimeException(e);
         }
+
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
     @Override
     public UserDetailsService userDetailsService() {
-        return new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                return userRepository.findByEmail(username).get();
-            }
-        };
+        return username -> userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
 }

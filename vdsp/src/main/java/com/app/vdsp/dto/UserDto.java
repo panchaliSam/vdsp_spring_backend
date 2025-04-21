@@ -4,6 +4,7 @@ import com.app.vdsp.type.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,9 @@ public class UserDto {
     private String firstName;
     @NotBlank(message = "Last name should not be blank")
     private String lastName;
+    @NotBlank(message = "Password should not be blank")
+    @Size(min = 60)
+    private String password;
     @NotBlank(message = "Email should not be blank")
     @Email(message = "Invalid email format")
     @Pattern(
