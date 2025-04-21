@@ -1,6 +1,5 @@
 package com.app.vdsp.filter;
 
-import ch.qos.logback.core.util.StringUtil;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.utils.JWTService;
 import io.micrometer.common.util.StringUtils;
@@ -13,10 +12,12 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
