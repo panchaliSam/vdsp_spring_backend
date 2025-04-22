@@ -2,15 +2,15 @@ package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -31,5 +31,11 @@ public class UserController {
     @PostMapping("/login")
     public TokenResponseDto login(@RequestBody JsonNode user) {
         return userService.loginUser(user.get("email").asText(), user.get("password").asText());
+    }
+
+    @GetMapping("/getAll")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.of(Optional.of(userService.getAllUsers()));
     }
 }
