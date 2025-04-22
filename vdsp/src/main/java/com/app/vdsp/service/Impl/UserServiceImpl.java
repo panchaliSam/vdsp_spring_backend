@@ -104,16 +104,64 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserById(Long id) {
-        return null;
+        try{
+            Optional<User> user = userRepository.findByUserId(id);
+            if(user.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
+            return user.get();
+        } catch (Exception e) {
+            if(e instanceof ResponseStatusException){
+                throw (ResponseStatusException) e;
+            }
+            log.error("UserServiceImpl | getUserById | Exception: {}", e.toString());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public void UpdateUser(Long id, UserDto userDto) {
+    public void UpdateUser(Long id, UserDto updatedUser) {
+        try{
+            Optional<User> existUser = userRepository.findById(id);
+            if(existUser.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
 
+            User user = existUser.get();
+            user.setFirstName(updatedUser.getFirstName());
+            user.setLastName(updatedUser.getLastName());
+            if(updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()){
+                user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+            }
+            user.setEmail(updatedUser.getEmail());
+            user.setPhoneNumber(updatedUser.getPhoneNumber());
+            user.setRole(updatedUser.getRole());
+
+            userRepository.save(user);
+
+        } catch (Exception e) {
+            if(e instanceof ResponseStatusException){
+                throw (ResponseStatusException) e;
+            }
+            log.error("UserServiceImpl | updateUser | Exception: {}", e.toString());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public void deleteUser(Long id, UserDto userDto) {
-
+    public void deleteUser(Long id) {
+        try{
+            Optional<User> existUser = userRepository.findById(id);
+            if(existUser.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            if (e instanceof ResponseStatusException) {
+                throw (ResponseStatusException) e;
+            }
+            log.error("UserServiceImpl | deleteUser | {}", e.toString());
+            throw new RuntimeException(e);
+        }
     }
 }
