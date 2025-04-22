@@ -120,7 +120,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void UpdateUser(Long id, UserDto updatedUser) {
+    public void updateUser(Long id, UserDto updatedUser) {
         try{
             Optional<User> existUser = userRepository.findById(id);
             if(existUser.isEmpty()){

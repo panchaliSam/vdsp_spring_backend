@@ -50,25 +50,24 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-
     @PutMapping("/update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'STAFF')")
-    public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody @Validated UserDto updatedUser, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<String> updateUser(
+            @PathVariable Long id,
+            @RequestBody @Validated UserDto updatedUser,
+            @AuthenticationPrincipal User currentUser) {
         if (isAdminOrOwner(currentUser, id)) {
-            userService.UpdateUser(id, updatedUser);
-            return ResponseEntity.ok().build();
+            userService.updateUser(id, updatedUser);
+            return ResponseEntity.ok("User updated successfully.");
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this user.");
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-        if (isAdminOrOwner(currentUser, id)) {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully.");
     }
 
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
