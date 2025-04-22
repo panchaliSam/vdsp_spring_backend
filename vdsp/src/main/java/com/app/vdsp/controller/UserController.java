@@ -4,9 +4,12 @@ import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
+import com.app.vdsp.type.Role;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +37,41 @@ public class UserController {
     }
 
     @GetMapping("/getAll")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.of(Optional.of(userService.getAllUsers()));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'STAFF')")
+    public ResponseEntity<User> getUserById(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+        if (isAdminOrOwner(currentUser, id)) {
+            return ResponseEntity.of(Optional.of(userService.getUserById(id)));
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'STAFF')")
+    public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody @Validated UserDto updatedUser, @AuthenticationPrincipal User currentUser) {
+        if (isAdminOrOwner(currentUser, id)) {
+            userService.UpdateUser(id, updatedUser);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+        if (isAdminOrOwner(currentUser, id)) {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
+        return currentUser.getRole() == Role.ROLE_ADMIN || currentUser.getId().equals(targetUserId);
     }
 }
