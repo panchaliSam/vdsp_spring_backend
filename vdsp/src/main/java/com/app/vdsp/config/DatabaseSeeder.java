@@ -29,7 +29,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .email("admin@example.com")
                     .password(hashedPassword)
                     .phoneNumber("1234567890")
-                    .role(Role.ADMIN)
+                    .role(Role.ROLE_ADMIN)
                     .build();
             userRepository.save(adminUser);
         }

@@ -1,7 +1,7 @@
 package com.app.vdsp.type;
 
 public enum Role {
-    CUSTOMER,
-    ADMIN,
-    STAFF,
+    ROLE_CUSTOMER,
+    ROLE_ADMIN,
+    ROLE_STAFF,
 }
