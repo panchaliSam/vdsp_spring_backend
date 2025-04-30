@@ -9,13 +9,17 @@ import com.app.vdsp.repository.ReservationRepository;
 import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
 import com.app.vdsp.utils.JWTService;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
 public class ReservationServiceImpl implements ReservationService {
+
+    private static final Logger log = LoggerFactory.getLogger(ReservationServiceImpl.class);
 
     private final JWTService jwtService;
     private final ReservationRepository reservationRepository;
@@ -30,30 +34,42 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationDto createReservation(ReservationDto reservationDto) {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = jwtService.extractUserId(userDetails.getUsername());
+    public ReservationDto createReservation(ReservationDto reservationDto, String authorizationHeader) {
+        log.info("Creating reservation with authorization header: {}", authorizationHeader);
 
-        reservationDto.setUserId(userId);
+        try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                throw new RuntimeException("Authorization header is missing or invalid");
+            }
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
-                .orElseThrow(() -> new RuntimeException("Package not found"));
+            String token = authorizationHeader.substring(7);
 
-        Reservation reservation = new Reservation();
-        reservation.setUser(user);
-        reservation.setEventType(reservationDto.getEventType());
-        reservation.setEventPackage(eventPackage);
-        reservation.setEventLocation(reservationDto.getEventLocation());
-        reservation.setEventDate(reservationDto.getEventDate());
-        reservation.setEventStartTime(reservationDto.getEventStartTime());
-        reservation.setEventEndTime(reservationDto.getEventEndTime());
-        reservation.setCreatedAt(LocalDateTime.now());
-        reservation.setUpdatedAt(LocalDateTime.now());
+            Long userId = jwtService.extractUserId(token);
 
-        reservationRepository.save(reservation);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
+                    .orElseThrow(() -> new RuntimeException("Package not found"));
 
-        return reservationDto;
+            Reservation reservation = new Reservation();
+            reservation.setUser(user);
+            reservation.setEventType(reservationDto.getEventType());
+            reservation.setEventPackage(eventPackage);
+            reservation.setEventLocation(reservationDto.getEventLocation());
+            reservation.setEventDate(reservationDto.getEventDate());
+            reservation.setEventStartTime(reservationDto.getEventStartTime());
+            reservation.setEventEndTime(reservationDto.getEventEndTime());
+            reservation.setCreatedAt(LocalDateTime.now());
+            reservation.setUpdatedAt(LocalDateTime.now());
+
+            reservationRepository.save(reservation);
+
+            log.info("Reservation created: {}", reservation);
+            return reservationDto;
+        } catch (Exception e) {
+            log.error("Error while creating reservation", e);
+            throw new RuntimeException("Failed to create reservation", e);
+        }
     }
 
 

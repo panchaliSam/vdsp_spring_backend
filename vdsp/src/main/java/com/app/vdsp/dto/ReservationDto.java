@@ -38,8 +38,4 @@ public class ReservationDto {
 
     @NotNull(message = "Event end time cannot be null")
     private LocalTime eventEndTime;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 }
