@@ -12,7 +12,9 @@ import com.app.vdsp.type.SessionType;
 import com.app.vdsp.utils.JWTService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,7 +44,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         try {
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                throw new RuntimeException("Authorization header is missing or invalid");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid");
             }
 
             String token = authorizationHeader.substring(7);
@@ -50,9 +52,10 @@ public class ReservationServiceImpl implements ReservationService {
             Long userId = jwtService.extractUserId(token);
 
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
             Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
-                    .orElseThrow(() -> new RuntimeException("Package not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
 
             SessionType sessionType = calculateSessionType(
                     reservationDto.getEventStartTime(),
@@ -80,9 +83,12 @@ public class ReservationServiceImpl implements ReservationService {
 
             log.info("Reservation created: {}", reservation);
             return reservationDto;
+        } catch (ResponseStatusException e) {
+            log.error("Business error: {}", e.getReason(), e);
+            throw e;
         } catch (Exception e) {
-            log.error("Error while creating reservation", e);
-            throw new RuntimeException("Failed to create reservation", e);
+            log.error("Unexpected error while creating reservation", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while creating reservation", e);
         }
     }
 
@@ -90,17 +96,21 @@ public class ReservationServiceImpl implements ReservationService {
         List<Reservation> existingReservations = reservationRepository.findByEventDate(eventDate);
 
         for (Reservation reservation : existingReservations) {
-            if(reservation.getSessionType() == SessionType.FULLDAY_SESSION){
+            if (reservation.getSessionType() == SessionType.FULLDAY_SESSION) {
                 log.info("Reservation with session type {} is already full session", sessionType);
-                throw new RuntimeException("Full day session already exists. No further reservations allowed for this date.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "A full-day session is already reserved for this date. No further reservations are allowed.");
             }
             if (sessionType == SessionType.FULLDAY_SESSION) {
-                throw new RuntimeException("Cannot create a full day session as other sessions already exist.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Cannot create a full-day session as morning or evening sessions already exist for this date.");
             }
             if ((sessionType == SessionType.MORNING_SESSION && reservation.getSessionType() == SessionType.EVENING_SESSION) ||
                     (sessionType == SessionType.EVENING_SESSION && reservation.getSessionType() == SessionType.MORNING_SESSION)) {
+                continue;
             } else {
-                throw new RuntimeException("Invalid session type. Morning and Evening sessions cannot overlap.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Invalid session type. Morning and evening sessions cannot overlap or conflict.");
             }
         }
     }
