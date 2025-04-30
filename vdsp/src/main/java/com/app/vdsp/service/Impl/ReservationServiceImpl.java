@@ -11,6 +11,7 @@ import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
 import com.app.vdsp.type.SessionType;
 import com.app.vdsp.utils.JWTService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -91,8 +93,16 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<Reservation> getAllReservations() {
-        return List.of();
+    public List<ReservationDto> getAllReservations() {
+        try {
+            return reservationRepository.findAll().stream()
+                    .map(ReservationDto::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Unexpected error while getting all reservations", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error occurred while getting all reservations");
+        }
     }
 
     @Override
@@ -100,8 +110,4 @@ public class ReservationServiceImpl implements ReservationService {
         return null;
     }
 
-    @Override
-    public void updateReservation(ReservationDto reservationDto) {
-
-    }
 }

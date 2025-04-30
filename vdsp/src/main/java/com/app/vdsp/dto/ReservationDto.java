@@ -1,5 +1,6 @@
 package com.app.vdsp.dto;
 
+import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.type.EventType;
 import com.app.vdsp.type.SessionType;
 import jakarta.validation.constraints.NotBlank;
@@ -40,5 +41,18 @@ public class ReservationDto {
 
     @NotNull(message = "Session type cannot be null")
     private SessionType sessionType;
+
+    public static ReservationDto fromEntity(Reservation reservation) {
+        return ReservationDto.builder()
+                .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
+                .eventType(reservation.getEventType())
+                .packageId(reservation.getEventPackage().getId())
+                .eventLocation(reservation.getEventLocation())
+                .eventDate(reservation.getEventDate())
+                .eventStartTime(reservation.getEventStartTime())
+                .eventEndTime(reservation.getEventEndTime())
+                .sessionType(reservation.getSessionType())
+                .build();
+    }
 
 }

@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/reservations")
 public class ReservationController {
@@ -23,5 +25,11 @@ public class ReservationController {
             @RequestHeader("Authorization") String authorizationHeader) {
         ReservationDto createdReservation = reservationService.createReservation(reservationDto, authorizationHeader);
         return ResponseEntity.ok(createdReservation);
+    }
+
+    @GetMapping("/getAll")
+    public ResponseEntity<List<ReservationDto>> getAllReservations() {
+        List<ReservationDto> reservations = reservationService.getAllReservations();
+        return ResponseEntity.ok(reservations);
     }
 }
