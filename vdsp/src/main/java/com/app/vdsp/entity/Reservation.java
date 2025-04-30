@@ -1,6 +1,7 @@
 package com.app.vdsp.entity;
 
 import com.app.vdsp.type.EventType;
+import com.app.vdsp.type.SessionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -58,6 +59,12 @@ public class Reservation {
     @NotNull(message = "Event end time cannot be null")
     @Column(name = "event_end_time", nullable = false)
     private LocalTime eventEndTime;
+
+    @NotNull(message = "Session type cannot be null")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "session_type", nullable = false)
+    private SessionType sessionType;
+
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

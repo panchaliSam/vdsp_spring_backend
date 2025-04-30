@@ -8,12 +8,15 @@ import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.ReservationRepository;
 import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
+import com.app.vdsp.type.SessionType;
 import com.app.vdsp.utils.JWTService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -51,6 +54,13 @@ public class ReservationServiceImpl implements ReservationService {
             Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
                     .orElseThrow(() -> new RuntimeException("Package not found"));
 
+            SessionType sessionType = calculateSessionType(
+                    reservationDto.getEventStartTime(),
+                    reservationDto.getEventEndTime()
+            );
+
+            validateSessionType(sessionType, reservationDto.getEventDate());
+
             Reservation reservation = new Reservation();
             reservation.setUser(user);
             reservation.setEventType(reservationDto.getEventType());
@@ -59,10 +69,14 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setEventDate(reservationDto.getEventDate());
             reservation.setEventStartTime(reservationDto.getEventStartTime());
             reservation.setEventEndTime(reservationDto.getEventEndTime());
+            reservation.setSessionType(sessionType);
             reservation.setCreatedAt(LocalDateTime.now());
             reservation.setUpdatedAt(LocalDateTime.now());
 
             reservationRepository.save(reservation);
+
+            reservationDto.setCustomerName(user.getFirstName() + " " + user.getLastName());
+            reservationDto.setSessionType(sessionType);
 
             log.info("Reservation created: {}", reservation);
             return reservationDto;
@@ -72,6 +86,36 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
+    private void validateSessionType(SessionType sessionType, LocalDate eventDate) {
+        List<Reservation> existingReservations = reservationRepository.findByEventDate(eventDate);
+
+        for (Reservation reservation : existingReservations) {
+            if(reservation.getSessionType() == SessionType.FULLDAY_SESSION){
+                log.info("Reservation with session type {} is already full session", sessionType);
+                throw new RuntimeException("Full day session already exists. No further reservations allowed for this date.");
+            }
+            if (sessionType == SessionType.FULLDAY_SESSION) {
+                throw new RuntimeException("Cannot create a full day session as other sessions already exist.");
+            }
+            if ((sessionType == SessionType.MORNING_SESSION && reservation.getSessionType() == SessionType.EVENING_SESSION) ||
+                    (sessionType == SessionType.EVENING_SESSION && reservation.getSessionType() == SessionType.MORNING_SESSION)) {
+            } else {
+                throw new RuntimeException("Invalid session type. Morning and Evening sessions cannot overlap.");
+            }
+        }
+    }
+
+    private SessionType calculateSessionType(LocalTime startTime, LocalTime endTime) {
+        long duration = java.time.Duration.between(startTime, endTime).toHours();
+
+        if (duration >= 6) {
+            return SessionType.FULLDAY_SESSION;
+        } else if (startTime.isBefore(LocalTime.NOON)) {
+            return SessionType.MORNING_SESSION;
+        } else {
+            return SessionType.EVENING_SESSION;
+        }
+    }
 
     @Override
     public List<Reservation> getAllReservations() {

@@ -1,6 +1,7 @@
 package com.app.vdsp.dto;
 
 import com.app.vdsp.type.EventType;
+import com.app.vdsp.type.SessionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -18,8 +18,7 @@ import java.time.LocalTime;
 @Builder
 public class ReservationDto {
 
-    @NotNull(message="User ID cannot be null")
-    private Long userId;
+    private String customerName;
 
     @NotNull(message = "Event type cannot be null")
     private EventType eventType;
@@ -38,4 +37,8 @@ public class ReservationDto {
 
     @NotNull(message = "Event end time cannot be null")
     private LocalTime eventEndTime;
+
+    @NotNull(message = "Session type cannot be null")
+    private SessionType sessionType;
+
 }
