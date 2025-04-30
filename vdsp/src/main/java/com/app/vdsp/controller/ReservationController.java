@@ -2,11 +2,13 @@ package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.service.ReservationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/reservations")
@@ -27,9 +29,19 @@ public class ReservationController {
         return ResponseEntity.ok(createdReservation);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/getAll")
     public ResponseEntity<List<ReservationDto>> getAllReservations() {
         List<ReservationDto> reservations = reservationService.getAllReservations();
         return ResponseEntity.ok(reservations);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservationDto> getReservationById(@PathVariable("id") Long id) {
+        Optional<ReservationDto> reservation = reservationService.getReservationById(id);
+
+        return reservation.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(null));
     }
 }

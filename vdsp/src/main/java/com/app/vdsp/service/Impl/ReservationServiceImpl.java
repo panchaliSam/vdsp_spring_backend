@@ -11,7 +11,6 @@ import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
 import com.app.vdsp.type.SessionType;
 import com.app.vdsp.utils.JWTService;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,7 +95,10 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDto> getAllReservations() {
         try {
-            return reservationRepository.findAll().stream()
+            List<Reservation> reservations = reservationRepository.findAll();
+            log.info("All reservations: {}", reservations);
+
+            return reservations.stream()
                     .map(ReservationDto::fromEntity)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -106,8 +109,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public Reservation getReservationById(Long id) {
-        return null;
+    public Optional<ReservationDto> getReservationById(Long id) {
+        try {
+            Optional<Reservation> reservation = reservationRepository.findById(id);
+            if (reservation.isPresent()) {
+                log.info("Reservation found: {}", reservation.get());
+            } else {
+                log.warn("Reservation not found for ID: {}", id);
+            }
+            return reservation.map(ReservationDto::fromEntity);
+        } catch (Exception e) {
+            log.error("Unexpected error while fetching reservation with ID: {}", id, e);
+            throw new RuntimeException("Unexpected error occurred while fetching reservation", e);
+        }
     }
-
 }

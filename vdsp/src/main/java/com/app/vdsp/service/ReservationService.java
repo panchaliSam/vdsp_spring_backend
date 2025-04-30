@@ -4,9 +4,10 @@ import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.Reservation;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReservationService {
     ReservationDto createReservation(ReservationDto reservationDto, String authorizationHeader);
     List<ReservationDto> getAllReservations();
-    Reservation getReservationById(Long id);
+    Optional<ReservationDto> getReservationById(Long id);
 }

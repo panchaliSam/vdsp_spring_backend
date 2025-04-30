@@ -38,6 +38,10 @@ public class JWTService {
         return claims.get("userId", Long.class);
     }
 
+    public String extractUserRole(String token){
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class);
+    }
 
     public String generateToken(UserDetails userDetails){
         User user = (User) userDetails;
