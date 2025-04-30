@@ -33,10 +33,17 @@ public class JWTService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("userId", Long.class);
+    }
+
+
     public String generateToken(UserDetails userDetails){
         User user = (User) userDetails;
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("authorities", userDetails.getAuthorities());
+        claims.put("userId", user.getId());
         claims.put("typ", "access-token");
         return generateToken(claims, userDetails);
     }
@@ -45,6 +52,7 @@ public class JWTService {
         User user = (User) userDetails;
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("authorities", userDetails.getAuthorities());
+        claims.put("userId", user.getId());
         claims.put("typ", "refresh-token");
         return generateRefreshToken(claims, userDetails);
     }
