@@ -4,6 +4,7 @@ import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.entity.Package;
+import com.app.vdsp.helpers.SessionHelper;
 import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.ReservationRepository;
 import com.app.vdsp.repository.UserRepository;
@@ -16,9 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -48,7 +47,6 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             String token = authorizationHeader.substring(7);
-
             Long userId = jwtService.extractUserId(token);
 
             User user = userRepository.findById(userId)
@@ -57,12 +55,12 @@ public class ReservationServiceImpl implements ReservationService {
             Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
 
-            SessionType sessionType = calculateSessionType(
+            SessionType sessionType = SessionHelper.calculateSessionType(
                     reservationDto.getEventStartTime(),
                     reservationDto.getEventEndTime()
             );
 
-            validateSessionType(sessionType, reservationDto.getEventDate());
+            SessionHelper.validateSessionType(sessionType, reservationDto.getEventDate(), reservationRepository);
 
             Reservation reservation = new Reservation();
             reservation.setUser(user);
@@ -89,41 +87,6 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (Exception e) {
             log.error("Unexpected error while creating reservation", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while creating reservation", e);
-        }
-    }
-
-    private void validateSessionType(SessionType sessionType, LocalDate eventDate) {
-        List<Reservation> existingReservations = reservationRepository.findByEventDate(eventDate);
-
-        for (Reservation reservation : existingReservations) {
-            if (reservation.getSessionType() == SessionType.FULLDAY_SESSION) {
-                log.info("Reservation with session type {} is already full session", sessionType);
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "A full-day session is already reserved for this date. No further reservations are allowed.");
-            }
-            if (sessionType == SessionType.FULLDAY_SESSION) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Cannot create a full-day session as morning or evening sessions already exist for this date.");
-            }
-            if ((sessionType == SessionType.MORNING_SESSION && reservation.getSessionType() == SessionType.EVENING_SESSION) ||
-                    (sessionType == SessionType.EVENING_SESSION && reservation.getSessionType() == SessionType.MORNING_SESSION)) {
-                continue;
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Invalid session type. Morning and evening sessions cannot overlap or conflict.");
-            }
-        }
-    }
-
-    private SessionType calculateSessionType(LocalTime startTime, LocalTime endTime) {
-        long duration = java.time.Duration.between(startTime, endTime).toHours();
-
-        if (duration >= 6) {
-            return SessionType.FULLDAY_SESSION;
-        } else if (startTime.isBefore(LocalTime.NOON)) {
-            return SessionType.MORNING_SESSION;
-        } else {
-            return SessionType.EVENING_SESSION;
         }
     }
 
