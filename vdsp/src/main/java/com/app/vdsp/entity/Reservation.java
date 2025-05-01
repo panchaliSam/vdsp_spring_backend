@@ -65,7 +65,6 @@ public class Reservation {
     @Column(name = "session_type", nullable = false)
     private SessionType sessionType;
 
-
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

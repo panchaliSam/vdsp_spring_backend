@@ -2,10 +2,12 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.Reservation;
+import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.entity.Package;
 import com.app.vdsp.helpers.SessionHelper;
 import com.app.vdsp.repository.PackageRepository;
+import com.app.vdsp.repository.ReservationApprovalRepository;
 import com.app.vdsp.repository.ReservationRepository;
 import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
@@ -31,12 +33,14 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
+    private final ReservationApprovalRepository reservationApprovalRepository;
 
-    public ReservationServiceImpl(JWTService jwtService, ReservationRepository reservationRepository, UserRepository userRepository, PackageRepository packageRepository) {
+    public ReservationServiceImpl(JWTService jwtService, ReservationRepository reservationRepository, UserRepository userRepository, PackageRepository packageRepository, ReservationApprovalRepository reservationApprovalRepository) {
         this.jwtService = jwtService;
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.packageRepository = packageRepository;
+        this.reservationApprovalRepository = reservationApprovalRepository;
     }
 
     @Override
@@ -77,6 +81,14 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setUpdatedAt(LocalDateTime.now());
 
             reservationRepository.save(reservation);
+
+            ReservationApproval approval = ReservationApproval.builder()
+                    .reservation(reservation)
+                    .user(user)
+                    .status(false)
+                    .build();
+
+            reservationApprovalRepository.save(approval);
 
             reservationDto.setCustomerName(user.getFirstName() + " " + user.getLastName());
             reservationDto.setSessionType(sessionType);

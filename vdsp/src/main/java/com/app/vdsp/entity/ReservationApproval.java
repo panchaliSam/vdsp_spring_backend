@@ -21,7 +21,7 @@ public class ReservationApproval {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
