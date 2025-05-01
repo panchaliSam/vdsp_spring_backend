@@ -1,10 +1,12 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
+import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.repository.ReservationApprovalRepository;
 import com.app.vdsp.service.ReservationApprovalService;
 import com.app.vdsp.type.ApprovalStatus;
+import com.app.vdsp.utils.JWTService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,11 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
     private static final Logger log = LoggerFactory.getLogger(ReservationApprovalServiceImpl.class);
 
     private final ReservationApprovalRepository reservationApprovalRepository;
+    private final JWTService jwtService;
 
-    public ReservationApprovalServiceImpl(ReservationApprovalRepository reservationApprovalRepository) {
+    public ReservationApprovalServiceImpl(ReservationApprovalRepository reservationApprovalRepository, JWTService jwtService) {
         this.reservationApprovalRepository = reservationApprovalRepository;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -59,6 +63,31 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             log.error("Error while updating reservation approval status", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Error while updating reservation approval status", e);
+        }
+    }
+
+    @Override
+    public List<ReservationDto> getApprovedReservations(String authorizationHeader) {
+        try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid");
+            }
+
+            String token = authorizationHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            List<ReservationApproval> approvedReservations = reservationApprovalRepository.findByUserId(userId);
+            log.info("Approved reservations for user {}: {}", userId, approvedReservations);
+
+            return approvedReservations.stream()
+                    .map(ra -> ReservationDto.fromEntity(ra.getReservation()))
+                    .collect(Collectors.toList());
+        } catch (ResponseStatusException e) {
+            log.error("Business error: {}", e.getReason(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error while fetching approved reservations", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while fetching approved reservations", e);
         }
     }
 

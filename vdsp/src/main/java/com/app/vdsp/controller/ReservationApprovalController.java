@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
+import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.service.ReservationApprovalService;
 import com.app.vdsp.type.ApprovalStatus;
 import org.slf4j.Logger;
@@ -37,13 +38,10 @@ public class ReservationApprovalController {
         }
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ReservationApprovalDto> updateReservationApprovalStatus(
-            @PathVariable Long id,
-            @RequestBody Map<String, ApprovalStatus> requestBody) {
-        ApprovalStatus status = requestBody.get("status");
-        ReservationApprovalDto updatedApproval = reservationApprovalService.updateApprovalStatus(id, status);
-        return ResponseEntity.ok(updatedApproval);
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @GetMapping("/reservationApproval")
+    public ResponseEntity<List<ReservationDto>> getApprovedReservations(@RequestHeader("Authorization") String authorizationHeader) {
+        List<ReservationDto> approvedReservations = reservationApprovalService.getApprovedReservations(authorizationHeader);
+        return ResponseEntity.ok(approvedReservations);
     }
-
 }
