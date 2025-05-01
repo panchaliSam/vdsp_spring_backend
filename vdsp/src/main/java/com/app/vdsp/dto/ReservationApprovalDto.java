@@ -2,6 +2,7 @@ package com.app.vdsp.dto;
 
 import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.ReservationApproval;
+import com.app.vdsp.type.ApprovalStatus;
 import com.app.vdsp.type.EventType;
 import com.app.vdsp.type.SessionType;
 import jakarta.validation.constraints.NotNull;
@@ -27,7 +28,7 @@ public class ReservationApprovalDto {
     private LocalDateTime approvedAt;
 
     @NotNull(message = "Status cannot be null")
-    private String status;
+    private ApprovalStatus status;
 
     @NotNull(message = "Customer name cannot be null")
     private String customerName;
@@ -58,7 +59,7 @@ public class ReservationApprovalDto {
         return ReservationApprovalDto.builder()
                 .id(reservationApproval.getId())
                 .approvedAt(reservationApproval.getApprovedAt())
-                .status(reservationApproval.getStatus() ? "Approved" : "Disapproved")
+                .status(reservationApproval.getStatus() ? ApprovalStatus.APPROVED : ApprovalStatus.DISAPPROVED)
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
                 .eventType(reservation.getEventType())
                 .packageId(reservation.getEventPackage().getId())
