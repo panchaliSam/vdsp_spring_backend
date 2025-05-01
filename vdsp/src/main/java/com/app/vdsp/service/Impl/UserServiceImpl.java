@@ -2,9 +2,12 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.entity.Staff;
 import com.app.vdsp.entity.User;
+import com.app.vdsp.repository.StaffRepository;
 import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.UserService;
+import com.app.vdsp.type.Role;
 import com.app.vdsp.utils.JWTService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -29,13 +32,16 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final StaffRepository staffRepository;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.staffRepository = staffRepository;
     }
+
 
     @Override
     public UserDto registerUser(UserDto userDto) {
@@ -49,7 +55,18 @@ public class UserServiceImpl implements UserService {
         try {
             User user = modelMapper.map(userDto, User.class);
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-            userRepository.save(user);
+            User savedUser = userRepository.save(user);
+
+            if (user.getRole() == Role.ROLE_STAFF) {
+                Staff staff = Staff.builder()
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .email(user.getEmail())
+                        .phoneNumber(user.getPhoneNumber())
+                        .userId(savedUser.getId())
+                        .build();
+                staffRepository.save(staff);
+            }
 
             log.info("User registered successfully with email: {}", userDto.getEmail());
             return userDto;
