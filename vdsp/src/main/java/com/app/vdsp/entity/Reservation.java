@@ -40,7 +40,7 @@ public class Reservation {
     private EventType eventType;
 
     @NotNull(message = "Package cannot be null")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "package_id", nullable = false)
     private Package eventPackage;
 

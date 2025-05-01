@@ -1,8 +1,6 @@
 package com.app.vdsp.service;
 
 import com.app.vdsp.dto.ReservationDto;
-import com.app.vdsp.entity.Reservation;
-
 import java.util.List;
 import java.util.Optional;
 
