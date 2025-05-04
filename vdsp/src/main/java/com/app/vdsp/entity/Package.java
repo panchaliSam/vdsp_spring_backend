@@ -41,11 +41,6 @@ public class Package {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @NotNull(message = "Duration in hours cannot be null")
-    @Positive(message = "Duration in hours must be positive")
-    @Column(name = "duration_hours", nullable = false)
-    private Integer durationHours;
-
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -46,7 +46,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .name("Standard Package")
                     .description("A standard package with basic features.")
                     .price(new BigDecimal("199.99"))
-                    .durationHours(3)
                     .build();
             packageRepository.save(samplePackage);
         }
