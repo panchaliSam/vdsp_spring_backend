@@ -1,6 +1,6 @@
 package com.app.vdsp.dto;
 
-import com.app.vdsp.entity.Package;
+import com.app.vdsp.entity.ReservationPackage;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -27,7 +27,7 @@ public class PackageDto {
     @Positive(message = "Price must be positive")
     private BigDecimal price;
 
-    public static PackageDto fromEntity(Package packageEntity) {
+    public static PackageDto fromEntity(ReservationPackage packageEntity) {
         return PackageDto.builder()
                 .name(packageEntity.getName())
                 .description(packageEntity.getDescription())

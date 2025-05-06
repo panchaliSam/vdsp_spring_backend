@@ -42,7 +42,7 @@ public class Reservation {
     @NotNull(message = "Package cannot be null")
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "package_id", nullable = false)
-    private Package eventPackage;
+    private ReservationPackage eventPackage;
 
     @NotBlank(message = "Event location cannot be blank")
     @Column(name = "event_location", nullable = false, columnDefinition = "TEXT")

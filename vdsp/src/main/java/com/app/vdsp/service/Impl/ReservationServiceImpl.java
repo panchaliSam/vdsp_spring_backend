@@ -4,7 +4,7 @@ import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.entity.User;
-import com.app.vdsp.entity.Package;
+import com.app.vdsp.entity.ReservationPackage;
 import com.app.vdsp.helpers.SessionHelper;
 import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.ReservationApprovalRepository;
@@ -58,7 +58,7 @@ public class ReservationServiceImpl implements ReservationService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-            Package eventPackage = packageRepository.findById(reservationDto.getPackageId())
+            ReservationPackage eventPackage = packageRepository.findById(reservationDto.getPackageId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
 
             SessionType sessionType = SessionHelper.calculateSessionType(

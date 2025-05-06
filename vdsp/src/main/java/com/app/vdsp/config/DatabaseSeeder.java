@@ -1,6 +1,6 @@
 package com.app.vdsp.config;
 
-import com.app.vdsp.entity.Package;
+import com.app.vdsp.entity.ReservationPackage;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.UserRepository;
@@ -42,7 +42,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         if (!packageRepository.existsById(1L)) {
-            Package samplePackage = Package.builder()
+            ReservationPackage samplePackage = ReservationPackage.builder()
                     .name("Standard Package")
                     .description("A standard package with basic features.")
                     .price(new BigDecimal("199.99"))
