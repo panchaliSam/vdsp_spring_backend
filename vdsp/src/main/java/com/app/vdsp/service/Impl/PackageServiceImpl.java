@@ -70,16 +70,24 @@ public class PackageServiceImpl implements PackageService {
     }
 
     @Override
-    public void updatePackageById(PackageDto packages, Long id, String authHeader) {
+    public void updatePackageById(PackageDto packageDto, Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        log.info("Updating package with id: {}", id);
+        log.info("Patching package with id: {}", id);
 
         ReservationPackage reservationPackage = packageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
 
-        reservationPackage.setName(packages.getName());
-        reservationPackage.setDescription(packages.getDescription());
-        reservationPackage.setPrice(packages.getPrice());
+        if (packageDto.getName() != null) {
+            reservationPackage.setName(packageDto.getName());
+        }
+        if (packageDto.getDescription() != null) {
+            reservationPackage.setDescription(packageDto.getDescription());
+        }
+        if (packageDto.getPrice() != null) {
+            reservationPackage.setPrice(packageDto.getPrice());
+        }
+
         packageRepository.save(reservationPackage);
     }
+
 }

@@ -53,12 +53,13 @@ public class PackageController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@RequestBody PackageDto packageDto,
-                                       @PathVariable Long id,
-                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        log.info("Received request to update package with id: {}", id);
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> patchUpdate(@RequestBody PackageDto packageDto,
+                                            @PathVariable Long id,
+                                            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+        log.info("Received request to patch update package with id: {}", id);
         packageService.updatePackageById(packageDto, id, authHeader);
         return ResponseEntity.ok().build();
     }
+
 }
