@@ -2,8 +2,11 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.entity.RefreshToken;
 import com.app.vdsp.entity.Staff;
 import com.app.vdsp.entity.User;
+import com.app.vdsp.helpers.AuthorizationHelper;
+import com.app.vdsp.repository.RefreshTokenRepository;
 import com.app.vdsp.repository.StaffRepository;
 import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.UserService;
@@ -17,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,13 +37,15 @@ public class UserServiceImpl implements UserService {
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final StaffRepository staffRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.staffRepository = staffRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
 
@@ -87,9 +93,24 @@ public class UserServiceImpl implements UserService {
 
             if (passwordEncoder.matches(password, user.getPassword())) {
                 log.info("Login successful for email: {}", email);
+
+                // Generate tokens
+                String accessToken = jwtService.generateToken(user);
+                String refreshTokenValue = jwtService.generateRefreshToken(user);
+
+                // Create and save refresh token entity
+                RefreshToken refreshToken = new RefreshToken();
+                refreshToken.setToken(refreshTokenValue);
+                refreshToken.setUser(user);
+                refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7)); // Example expiry duration
+                refreshToken.setRevoked(false);
+
+                refreshTokenRepository.save(refreshToken);
+
+                // Build and return the response
                 return TokenResponseDto.builder()
-                        .accessToken(jwtService.generateToken(user))
-                        .refreshToken(jwtService.generateRefreshToken(user))
+                        .accessToken(accessToken)
+                        .refreshToken(refreshTokenValue)
                         .userDetails(user)
                         .build();
             } else {
@@ -101,6 +122,7 @@ public class UserServiceImpl implements UserService {
         log.warn("Login failed: User with email {} not found", email);
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
+
 
 
     @Override
@@ -181,4 +203,41 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void logoutUser(String refreshToken) {
+        log.info("Logging out user with refresh token: {}", refreshToken);
+        Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshToken);
+
+        if (tokenOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");
+        }
+
+        RefreshToken token = tokenOptional.get();
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+        log.info("Refresh token revoked successfully.");
+    }
+
+    @Override
+    public String refreshAccessToken(String refreshToken, String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        log.info("Refreshing access token with refresh token: {}", refreshToken);
+        Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshToken);
+
+        if (tokenOptional.isEmpty() || tokenOptional.get().isRevoked()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or revoked refresh token");
+        }
+
+        RefreshToken token = tokenOptional.get();
+        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
+        }
+
+        User user = userRepository.findById(token.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        return jwtService.generateToken(user);
+    }
+
 }

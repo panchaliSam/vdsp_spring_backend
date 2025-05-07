@@ -17,4 +17,6 @@ public interface UserService {
     User getUserById(Long id);
     void updateUser(Long id, UserDto userDto);
     void deleteUser(Long id);
+    void logoutUser(String refreshToken);
+    String refreshAccessToken(String refreshToken, String authHeader);
 }

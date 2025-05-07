@@ -6,6 +6,7 @@ import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.Role;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -69,6 +70,19 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully.");
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody JsonNode request) {
+        userService.logoutUser(request.get("refresh_token").asText());
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refreshToken(@RequestBody JsonNode request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+        String accessToken = userService.refreshAccessToken(request.get("refresh_token").asText(), authHeader);
+        return ResponseEntity.ok(accessToken);
+    }
+
 
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
         return currentUser.getRole() == Role.ROLE_ADMIN || currentUser.getId().equals(targetUserId);
