@@ -5,6 +5,7 @@ import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.entity.ReservationPackage;
+import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.helpers.SessionHelper;
 import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.ReservationApprovalRepository;
@@ -19,8 +20,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -134,5 +138,34 @@ public class ReservationServiceImpl implements ReservationService {
             log.error("Unexpected error while fetching reservation with ID: {}", id, e);
             throw new RuntimeException("Unexpected error occurred while fetching reservation", e);
         }
+    }
+
+    @Override
+    public Map<String, List<LocalDate>> getReservedDates(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+
+        List<Reservation> reservations = reservationRepository.findAll();
+
+        List<LocalDate> fullDaySessions = reservations.stream()
+                .filter(reservation -> reservation.getSessionType() == SessionType.FULLDAY_SESSION)
+                .map(Reservation::getEventDate)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<LocalDate> partialSessions = reservations.stream()
+                .filter(reservation -> reservation.getSessionType() == SessionType.MORNING_SESSION ||
+                        reservation.getSessionType() == SessionType.EVENING_SESSION)
+                .collect(Collectors.groupingBy(Reservation::getEventDate, Collectors.toList()))
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().size() == 1)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        Map<String, List<LocalDate>> reservedDates = new HashMap<>();
+        reservedDates.put("fullDay", fullDaySessions);
+        reservedDates.put("partial", partialSessions);
+
+        return reservedDates;
     }
 }
