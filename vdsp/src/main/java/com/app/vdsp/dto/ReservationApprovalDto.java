@@ -56,10 +56,14 @@ public class ReservationApprovalDto {
 
     public static ReservationApprovalDto fromEntity(ReservationApproval reservationApproval) {
         Reservation reservation = reservationApproval.getReservation();
+        ApprovalStatus approvalStatus = (reservationApproval.getStatus() == null || !reservationApproval.getStatus())
+                ? ApprovalStatus.PENDING
+                : (reservationApproval.getStatus() ? ApprovalStatus.APPROVED : ApprovalStatus.DISAPPROVED);
+
         return ReservationApprovalDto.builder()
                 .id(reservationApproval.getId())
                 .approvedAt(reservationApproval.getApprovedAt())
-                .status(reservationApproval.getStatus() ? ApprovalStatus.APPROVED : ApprovalStatus.DISAPPROVED)
+                .status(approvalStatus)
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
                 .eventType(reservation.getEventType())
                 .packageId(reservation.getEventPackage().getId())
