@@ -1,7 +1,6 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
-import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.service.ReservationApprovalService;
 import com.app.vdsp.type.ApprovalStatus;
 import org.slf4j.Logger;
@@ -41,8 +40,8 @@ public class ReservationApprovalController {
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("/reservationApproval")
-    public ResponseEntity<List<ReservationDto>> getApprovedReservations(@RequestHeader("Authorization") String authorizationHeader) {
-        List<ReservationDto> approvedReservations = reservationApprovalService.getApprovedReservations(authorizationHeader);
+    public ResponseEntity<List<ReservationApprovalDto>> getApprovedReservations(@RequestHeader("Authorization") String authorizationHeader) {
+        List<ReservationApprovalDto> approvedReservations = reservationApprovalService.getApprovedReservations(authorizationHeader);
         return ResponseEntity.ok(approvedReservations);
     }
 

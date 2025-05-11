@@ -1,7 +1,6 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
-import com.app.vdsp.dto.ReservationDto;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.repository.ReservationApprovalRepository;
 import com.app.vdsp.service.ReservationApprovalService;
@@ -67,7 +66,7 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
     }
 
     @Override
-    public List<ReservationDto> getApprovedReservations(String authorizationHeader) {
+    public List<ReservationApprovalDto> getApprovedReservations(String authorizationHeader) {
         try {
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid");
@@ -80,7 +79,7 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             log.info("Approved reservations for user {}: {}", userId, approvedReservations);
 
             return approvedReservations.stream()
-                    .map(ra -> ReservationDto.fromEntity(ra.getReservation()))
+                    .map(ReservationApprovalDto::fromEntity)
                     .collect(Collectors.toList());
         } catch (ResponseStatusException e) {
             log.error("Business error: {}", e.getReason(), e);
@@ -90,5 +89,6 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while fetching approved reservations", e);
         }
     }
+
 
 }

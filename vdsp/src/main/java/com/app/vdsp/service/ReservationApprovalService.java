@@ -9,5 +9,6 @@ import java.util.List;
 public interface ReservationApprovalService {
     List<ReservationApprovalDto> getAllReservationApprovals();
     ReservationApprovalDto updateApprovalStatus(Long id, ApprovalStatus status);
-    List<ReservationDto> getApprovedReservations(String authorizationHeader);
+    List<ReservationApprovalDto> getApprovedReservations(String authorizationHeader);
+
 }
