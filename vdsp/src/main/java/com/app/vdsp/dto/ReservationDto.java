@@ -1,6 +1,7 @@
 package com.app.vdsp.dto;
 
 import com.app.vdsp.entity.Reservation;
+import com.app.vdsp.entity.ReservationPackage;
 import com.app.vdsp.type.EventType;
 import com.app.vdsp.type.SessionType;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -27,6 +29,10 @@ public class ReservationDto {
     @NotNull(message = "Package ID cannot be null")
     private Long packageId;
 
+    private String packageName;
+
+    private BigDecimal priceAmount;
+
     @NotBlank(message = "Event location cannot be blank")
     private String eventLocation;
 
@@ -42,11 +48,14 @@ public class ReservationDto {
     @NotNull(message = "Session type cannot be null")
     private SessionType sessionType;
 
-    public static ReservationDto fromEntity(Reservation reservation) {
+    // Method to convert from Reservation entity to ReservationDto
+    public static ReservationDto fromEntity(Reservation reservation, ReservationPackage reservationPackage) {
         return ReservationDto.builder()
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
                 .eventType(reservation.getEventType())
                 .packageId(reservation.getEventPackage().getId())
+                .packageName(reservationPackage.getName())
+                .priceAmount(reservationPackage.getPrice())
                 .eventLocation(reservation.getEventLocation())
                 .eventDate(reservation.getEventDate())
                 .eventStartTime(reservation.getEventStartTime())
@@ -54,5 +63,4 @@ public class ReservationDto {
                 .sessionType(reservation.getSessionType())
                 .build();
     }
-
 }

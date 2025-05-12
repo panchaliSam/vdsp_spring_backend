@@ -36,6 +36,9 @@ public class ReservationApprovalDto {
     @NotNull(message = "Event type cannot be null")
     private EventType eventType;
 
+    @NotNull(message = "Reservation ID cannot be null")
+    private Long reservationId;
+
     @NotNull(message = "Package ID cannot be null")
     private Long packageId;
 
@@ -66,6 +69,7 @@ public class ReservationApprovalDto {
                 .status(approvalStatus)
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
                 .eventType(reservation.getEventType())
+                .reservationId(reservation.getId()) // Include Reservation ID
                 .packageId(reservation.getEventPackage().getId())
                 .eventLocation(reservation.getEventLocation())
                 .eventDate(reservation.getEventDate())

@@ -96,6 +96,8 @@ public class ReservationServiceImpl implements ReservationService {
 
             reservationDto.setCustomerName(user.getFirstName() + " " + user.getLastName());
             reservationDto.setSessionType(sessionType);
+            reservationDto.setPackageName(eventPackage.getName());
+            reservationDto.setPriceAmount(eventPackage.getPrice());
 
             log.info("Reservation created: {}", reservation);
             return reservationDto;
@@ -115,7 +117,10 @@ public class ReservationServiceImpl implements ReservationService {
             log.info("All reservations: {}", reservations);
 
             return reservations.stream()
-                    .map(ReservationDto::fromEntity)
+                    .map(reservation -> {
+                        ReservationPackage reservationPackage = reservation.getEventPackage();
+                        return ReservationDto.fromEntity(reservation, reservationPackage);
+                    })
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Unexpected error while getting all reservations", e);
@@ -130,15 +135,19 @@ public class ReservationServiceImpl implements ReservationService {
             Optional<Reservation> reservation = reservationRepository.findById(id);
             if (reservation.isPresent()) {
                 log.info("Reservation found: {}", reservation.get());
+
+                ReservationPackage reservationPackage = reservation.get().getEventPackage();
+                return Optional.of(ReservationDto.fromEntity(reservation.get(), reservationPackage));
             } else {
                 log.warn("Reservation not found for ID: {}", id);
             }
-            return reservation.map(ReservationDto::fromEntity);
+            return Optional.empty();
         } catch (Exception e) {
             log.error("Unexpected error while fetching reservation with ID: {}", id, e);
             throw new RuntimeException("Unexpected error occurred while fetching reservation", e);
         }
     }
+
 
     @Override
     public Map<String, List<LocalDate>> getReservedDates(String authHeader) {
