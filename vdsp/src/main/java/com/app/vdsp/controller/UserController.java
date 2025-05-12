@@ -73,13 +73,15 @@ public class UserController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody JsonNode request) {
-        userService.logoutUser(request.get("refresh_token").asText());
+        String refreshToken = request.get("refresh_token").asText();
+        userService.logoutUser(refreshToken);
         return ResponseEntity.ok("Logged out successfully");
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<String> refreshToken(@RequestBody JsonNode request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        String accessToken = userService.refreshAccessToken(request.get("refresh_token").asText(), authHeader);
+    public ResponseEntity<String> refreshToken(@RequestBody JsonNode request) {
+        String refreshToken = request.get("refresh_token").asText();
+        String accessToken = userService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(accessToken);
     }
 

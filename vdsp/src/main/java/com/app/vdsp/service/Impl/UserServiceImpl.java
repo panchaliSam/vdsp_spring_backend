@@ -220,8 +220,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String refreshAccessToken(String refreshToken, String authHeader) {
-        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+    public String refreshAccessToken(String refreshToken) {
         log.info("Refreshing access token with refresh token: {}", refreshToken);
         Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshToken);
 
@@ -234,10 +233,12 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
         }
 
-        User user = userRepository.findById(token.getId())
+        Long userId = token.getUser().getId();
+        log.info("User ID from refresh token: {}", userId);
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         return jwtService.generateToken(user);
     }
-
 }
