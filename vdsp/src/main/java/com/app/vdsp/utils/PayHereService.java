@@ -20,17 +20,13 @@ public class PayHereService {
         return dotenv.get("payhere.merchant_id");
     }
 
+    public String merchantSecret(){
+        return dotenv.get("payhere.merchant_secret");
+    }
+
     public String getSandboxUrl() {
         return dotenv.get("payhere.sandbox_url");
     }
-
-//    public String getReturnUrl() {
-//        return dotenv.get("payhere.return_url");
-//    }
-//
-//    public String getCancelUrl() {
-//        return dotenv.get("payhere.cancel_url");
-//    }
 
     public String getNotifyUrl() {
         return dotenv.get("payhere.notify_url");
@@ -65,4 +61,30 @@ public class PayHereService {
             throw new RuntimeException("Error generating MD5 hash: " + e.getMessage(), e);
         }
     }
+
+    public boolean verifyPaymentStatus(String merchantId, String orderId, double amount, String currency, int statusCode, String receivedMd5Sig) {
+        if (merchantId == null || orderId == null || currency == null || receivedMd5Sig == null) {
+            throw new IllegalArgumentException("One or more required parameters are null");
+        }
+
+        String merchantSecret = dotenv.get("payhere.secret_key");
+
+        if (merchantSecret == null) {
+            throw new IllegalArgumentException("Merchant Secret Key not found in environment variables");
+        }
+
+        String amountFormatted = String.format("%.2f", amount);
+
+        String localMd5Sig = getMd5(
+                merchantId +
+                        orderId +
+                        amountFormatted +
+                        currency +
+                        statusCode +
+                        getMd5(merchantSecret).toUpperCase()
+        ).toUpperCase();
+
+        return localMd5Sig.equals(receivedMd5Sig);
+    }
+
 }
