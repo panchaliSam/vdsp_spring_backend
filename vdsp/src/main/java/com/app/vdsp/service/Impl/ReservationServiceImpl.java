@@ -62,7 +62,7 @@ public class ReservationServiceImpl implements ReservationService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-            ReservationPackage eventPackage = packageRepository.findById(reservationDto.getPackageId())
+            ReservationPackage eventPackage = packageRepository.findByName(reservationDto.getPackageName())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
 
             SessionType sessionType = SessionHelper.calculateSessionType(
@@ -96,6 +96,7 @@ public class ReservationServiceImpl implements ReservationService {
 
             reservationDto.setCustomerName(user.getFirstName() + " " + user.getLastName());
             reservationDto.setSessionType(sessionType);
+            reservationDto.setPackageId(eventPackage.getId());
             reservationDto.setPackageName(eventPackage.getName());
             reservationDto.setPriceAmount(eventPackage.getPrice());
 

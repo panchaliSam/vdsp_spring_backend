@@ -29,7 +29,7 @@ public class ReservationPackage {
     private Long id;
 
     @NotBlank(message = "Package name cannot be blank")
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 255, unique = true)
     private String name;
 
     @NotBlank(message = "Package description cannot be blank")

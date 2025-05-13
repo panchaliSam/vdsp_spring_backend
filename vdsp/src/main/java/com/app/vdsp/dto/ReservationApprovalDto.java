@@ -69,7 +69,7 @@ public class ReservationApprovalDto {
                 .status(approvalStatus)
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
                 .eventType(reservation.getEventType())
-                .reservationId(reservation.getId()) // Include Reservation ID
+                .reservationId(reservation.getId())
                 .packageId(reservation.getEventPackage().getId())
                 .eventLocation(reservation.getEventLocation())
                 .eventDate(reservation.getEventDate())

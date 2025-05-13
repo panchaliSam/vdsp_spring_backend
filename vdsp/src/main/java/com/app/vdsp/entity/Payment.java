@@ -25,30 +25,53 @@ public class Payment {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="reservation_id", nullable = false)
+    @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "merchant_id", nullable = false, length = 50)
+    private String merchantId;
+
+    @Column(name = "payhere_payment_id", nullable = false, length = 50)
+    private String paymentId;
+
+    @Column(name = "payment_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal payhereAmount;
+
+    @Column(name = "payment_currency", nullable = false, length = 10)
+    private String payhereCurrency;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status_code", nullable = false)
     private PaymentStatus paymentStatus;
 
-    @Column(nullable = false, length = 255)
-    private String paymentUrl;
+    @Column(name = "md5_signature", nullable = false, length = 255)
+    private String md5Signature;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal paymentAmount;
+    @Column(name = "custom_1", length = 255)
+    private String custom1;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "custom_2", length = 255)
+    private String custom2;
+
+    @Column(name = "payment_method", nullable = false, length = 50)
     private String paymentMethod;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "status_message", length = 500)
+    private String statusMessage;
+
+    @Column(name = "card_holder_name", length = 255)
+    private String cardHolderName;
+
+    @Column(name = "card_no", length = 20)
+    private String cardNo;
+
+    @Column(name = "card_expiry", length = 10)
+    private String cardExpiry;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PreUpdate

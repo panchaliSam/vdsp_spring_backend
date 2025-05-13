@@ -17,15 +17,31 @@ public class PaymentDto {
 
     private Long reservationId;
 
-    private Long userId;
+    private String merchantId;
+
+    private String paymentId;
+
+    private BigDecimal payhereAmount;
+
+    private String payhereCurrency;
 
     private PaymentStatus paymentStatus;
 
-    private String paymentUrl;
+    private String md5Signature;
 
-    private BigDecimal paymentAmount;
+    private String custom1;
+
+    private String custom2;
 
     private String paymentMethod;
+
+    private String statusMessage;
+
+    private String cardHolderName;
+
+    private String cardNo;
+
+    private String cardExpiry;
 
     private LocalDateTime createdAt;
 

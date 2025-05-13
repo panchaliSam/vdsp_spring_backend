@@ -24,13 +24,13 @@ public class PayHereService {
         return dotenv.get("payhere.sandbox_url");
     }
 
-    public String getReturnUrl() {
-        return dotenv.get("payhere.return_url");
-    }
-
-    public String getCancelUrl() {
-        return dotenv.get("payhere.cancel_url");
-    }
+//    public String getReturnUrl() {
+//        return dotenv.get("payhere.return_url");
+//    }
+//
+//    public String getCancelUrl() {
+//        return dotenv.get("payhere.cancel_url");
+//    }
 
     public String getNotifyUrl() {
         return dotenv.get("payhere.notify_url");

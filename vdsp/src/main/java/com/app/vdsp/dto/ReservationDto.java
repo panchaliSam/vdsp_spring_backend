@@ -26,9 +26,9 @@ public class ReservationDto {
     @NotNull(message = "Event type cannot be null")
     private EventType eventType;
 
-    @NotNull(message = "Package ID cannot be null")
     private Long packageId;
 
+    @NotBlank(message = "Package name cannot be blank")
     private String packageName;
 
     private BigDecimal priceAmount;
@@ -48,7 +48,6 @@ public class ReservationDto {
     @NotNull(message = "Session type cannot be null")
     private SessionType sessionType;
 
-    // Method to convert from Reservation entity to ReservationDto
     public static ReservationDto fromEntity(Reservation reservation, ReservationPackage reservationPackage) {
         return ReservationDto.builder()
                 .customerName(reservation.getUser().getFirstName() + " " + reservation.getUser().getLastName())
