@@ -43,11 +43,13 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/logout").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/refresh").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/payment/notify").permitAll()
+                                .requestMatchers(
+                                "/api/users/register",
+                                "/api/users/login",
+                                "/api/users/refresh",
+                                "/api/users/logout",
+                                "/api/payment/notify"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
