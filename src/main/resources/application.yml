@@ -6,12 +6,14 @@ server:
 spring:
   application:
     name: vdsp
+  config:
+    import: optional:file:.env[.properties]
 
   # DB Connectivity
   datasource:
-    url: jdbc:mysql://localhost:3306/vdsp
-    username: root
-    password: MySQL*123
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA and Hibernate Configuration
