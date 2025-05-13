@@ -105,6 +105,7 @@ public class UserServiceImpl implements UserService {
                 refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7)); // Example expiry duration
                 refreshToken.setRevoked(false);
 
+               // refreshTokenRepository.revokeAllActiveTokensForUser(user.getId());
                 refreshTokenRepository.save(refreshToken);
 
                 // Build and return the response

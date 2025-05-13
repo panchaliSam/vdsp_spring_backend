@@ -1,6 +1,5 @@
 package com.app.vdsp.controller;
 
-import com.app.vdsp.dto.PaymentDto;
 import com.app.vdsp.dto.PaymentRequestDto;
 import com.app.vdsp.entity.Payment;
 import com.app.vdsp.helpers.AuthorizationHelper;
@@ -46,7 +45,7 @@ public class PayHereController {
         payment.setPaymentId(params.get("payment_id"));
         payment.setPayhereAmount(new BigDecimal(params.get("payhere_amount")));
         payment.setPayhereCurrency(params.get("payhere_currency"));
-        payment.setPaymentStatus(PaymentStatus.valueOf(params.get("status_code"))); // Map status correctly
+        payment.setPaymentStatus(PaymentStatus.valueOf(params.get("status_code")));
         payment.setMd5Signature(params.get("md5sig"));
         payment.setCustom1(params.get("custom_1"));
         payment.setCustom2(params.get("custom_2"));
@@ -56,7 +55,6 @@ public class PayHereController {
         payment.setCardNo(params.get("card_no"));
         payment.setCardExpiry(params.get("card_expiry"));
 
-        // Call the service to process the payment notification and save the payment details
         return paymentService.processPaymentNotification(payment);
     }
 }
