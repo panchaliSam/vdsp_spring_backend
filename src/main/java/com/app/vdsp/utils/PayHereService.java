@@ -17,7 +17,7 @@ public class PayHereService {
     }
 
     public String merchantId(){
-        return dotenv.get("payhere.merchant_id");
+        return dotenv.get("PAYHERE.MERCHANT_ID");
     }
 
     public String merchantSecret(){
@@ -25,16 +25,16 @@ public class PayHereService {
     }
 
     public String getSandboxUrl() {
-        return dotenv.get("payhere.sandbox_url");
+        return dotenv.get("PAYHERE.SANDBOX_URL");
     }
 
     public String getNotifyUrl() {
-        return dotenv.get("payhere.notify_url");
+        return dotenv.get("PAYHERE.NOTIFY_URL");
     }
 
     public String generateHash(String orderId, double amount, String currency) {
-        String merchantId = dotenv.get("payhere.merchant_id");
-        String merchantSecret = dotenv.get("payhere.secret_key");
+        String merchantId = dotenv.get("PAYHERE.MERCHANT_ID");
+        String merchantSecret = dotenv.get("PAYHERE.SECRET_KEY");
 
         if (merchantId == null || merchantSecret == null) {
             throw new IllegalArgumentException("Merchant ID or Secret Key not found in environment variables");
@@ -67,7 +67,7 @@ public class PayHereService {
             throw new IllegalArgumentException("One or more required parameters are null");
         }
 
-        String merchantSecret = dotenv.get("payhere.secret_key");
+        String merchantSecret = dotenv.get("PAYHERE.SECRET_KEY");
 
         if (merchantSecret == null) {
             throw new IllegalArgumentException("Merchant Secret Key not found in environment variables");
