@@ -1,6 +1,6 @@
 package com.app.vdsp.type;
 
-public enum Role {
+public enum RoleType {
     ROLE_CUSTOMER,
     ROLE_ADMIN,
     ROLE_STAFF,

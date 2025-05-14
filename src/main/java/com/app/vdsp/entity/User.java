@@ -1,6 +1,6 @@
 package com.app.vdsp.entity;
 
-import com.app.vdsp.type.Role;
+import com.app.vdsp.type.RoleType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -58,7 +58,7 @@ public class User implements UserDetails {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private RoleType role;
 
     @CreatedDate
     @Column(updatable = false)

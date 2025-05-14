@@ -4,9 +4,8 @@ import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
-import com.app.vdsp.type.Role;
+import com.app.vdsp.type.RoleType;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -87,6 +86,6 @@ public class UserController {
 
 
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
-        return currentUser.getRole() == Role.ROLE_ADMIN || currentUser.getId().equals(targetUserId);
+        return currentUser.getRole() == RoleType.ROLE_ADMIN || currentUser.getId().equals(targetUserId);
     }
 }

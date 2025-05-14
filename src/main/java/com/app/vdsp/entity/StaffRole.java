@@ -1,5 +1,6 @@
 package com.app.vdsp.entity;
 
+import com.app.vdsp.type.StaffAssignStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(StaffRoleListener.class)
 @Table(name = "staff_roles", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"staff_id", "role_id"}, name = "unique_staff_role")
 })
@@ -28,14 +30,13 @@ public class StaffRole {
     private Staff staff;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false, referencedColumnName = "role_id")
+    @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     private Role role;
 
-    @Column(name = "assigned_at", nullable = false, updatable = false)
-    private LocalDateTime assignedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assign_status", nullable = false, length = 20)
+    private StaffAssignStatus assignStatus;
 
-    @PrePersist
-    private void prePersist() {
-        this.assignedAt = LocalDateTime.now();
-    }
+    @Column(name = "assigned_at", updatable = false)
+    private LocalDateTime assignedAt;
 }

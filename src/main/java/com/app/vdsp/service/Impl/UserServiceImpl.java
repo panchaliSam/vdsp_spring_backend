@@ -2,15 +2,11 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
-import com.app.vdsp.entity.RefreshToken;
-import com.app.vdsp.entity.Staff;
-import com.app.vdsp.entity.User;
-import com.app.vdsp.helpers.AuthorizationHelper;
-import com.app.vdsp.repository.RefreshTokenRepository;
-import com.app.vdsp.repository.StaffRepository;
-import com.app.vdsp.repository.UserRepository;
+import com.app.vdsp.entity.*;
+import com.app.vdsp.repository.*;
 import com.app.vdsp.service.UserService;
-import com.app.vdsp.type.Role;
+import com.app.vdsp.type.RoleType;
+import com.app.vdsp.type.StaffAssignStatus;
 import com.app.vdsp.utils.JWTService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -37,17 +33,18 @@ public class UserServiceImpl implements UserService {
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final StaffRepository staffRepository;
+    private final StaffRoleRepository staffRoleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, RefreshTokenRepository refreshTokenRepository) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, StaffRoleRepository staffRoleRepository, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.staffRepository = staffRepository;
+        this.staffRoleRepository = staffRoleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
     }
-
 
     @Override
     public UserDto registerUser(UserDto userDto) {
@@ -63,7 +60,8 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
             User savedUser = userRepository.save(user);
 
-            if (user.getRole() == Role.ROLE_STAFF) {
+            if (user.getRole() == RoleType.ROLE_STAFF) {
+                // Save staff entity
                 Staff staff = Staff.builder()
                         .firstName(user.getFirstName())
                         .lastName(user.getLastName())
@@ -71,7 +69,15 @@ public class UserServiceImpl implements UserService {
                         .phoneNumber(user.getPhoneNumber())
                         .userId(savedUser.getId())
                         .build();
-                staffRepository.save(staff);
+                Staff savedStaff = staffRepository.save(staff);
+
+                StaffRole staffRole = StaffRole.builder()
+                        .staff(savedStaff)
+                        .assignStatus(StaffAssignStatus.NOT_ASSIGNED)
+                        .role(null)
+                        .assignedAt(null)
+                        .build();
+                staffRoleRepository.save(staffRole);
             }
 
             log.info("User registered successfully with email: {}", userDto.getEmail());
@@ -102,7 +108,7 @@ public class UserServiceImpl implements UserService {
                 RefreshToken refreshToken = new RefreshToken();
                 refreshToken.setToken(refreshTokenValue);
                 refreshToken.setUser(user);
-                refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7)); // Example expiry duration
+                refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
                 refreshToken.setRevoked(false);
 
                // refreshTokenRepository.revokeAllActiveTokensForUser(user.getId());

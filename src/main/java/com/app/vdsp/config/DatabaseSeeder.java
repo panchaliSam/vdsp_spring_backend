@@ -4,7 +4,7 @@ import com.app.vdsp.entity.ReservationPackage;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.repository.PackageRepository;
 import com.app.vdsp.repository.UserRepository;
-import com.app.vdsp.type.Role;
+import com.app.vdsp.type.RoleType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Lazy;
@@ -36,7 +36,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .email("admin@example.com")
                     .password(hashedPassword)
                     .phoneNumber("1234567890")
-                    .role(Role.ROLE_ADMIN)
+                    .role(RoleType.ROLE_ADMIN)
                     .build();
             userRepository.save(adminUser);
         }
