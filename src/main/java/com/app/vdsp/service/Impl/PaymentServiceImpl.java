@@ -1,12 +1,14 @@
 package com.app.vdsp.service.Impl;
 
-import com.app.vdsp.entity.Notification;
 import com.app.vdsp.entity.Payment;
+import com.app.vdsp.entity.PaymentApproval;
 import com.app.vdsp.entity.Reservation;
+import com.app.vdsp.entity.User;
 import com.app.vdsp.helpers.AuthorizationHelper;
-import com.app.vdsp.repository.NotificationRepository;
+import com.app.vdsp.repository.PaymentApprovalRepository;
 import com.app.vdsp.repository.PaymentRepository;
 import com.app.vdsp.repository.ReservationRepository;
+import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.PaymentService;
 import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.utils.PayHereService;
@@ -22,12 +24,16 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PayHereService payHereService;
     private final ReservationRepository reservationRepository;
+    private final PaymentApprovalRepository paymentApprovalRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public PaymentServiceImpl(PaymentRepository paymentRepository, PayHereService payHereService, ReservationRepository reservationRepository) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, PayHereService payHereService, ReservationRepository reservationRepository, PaymentApprovalRepository paymentApprovalRepository, UserRepository userRepository) {
         this.paymentRepository = paymentRepository;
         this.payHereService = payHereService;
         this.reservationRepository = reservationRepository;
+        this.paymentApprovalRepository = paymentApprovalRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -87,6 +93,20 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
             System.out.println("Payment saved for order ID: " + orderId);
+
+            if (statusCode == 2) {
+                User user = reservation.getUser();
+
+                PaymentApproval approval = PaymentApproval.builder()
+                        .payment(payment)
+                        .user(user)
+                        .status(false)
+                        .approvedAt(null)
+                        .build();
+
+                paymentApprovalRepository.save(approval);
+                System.out.println("PaymentApproval created for user ID: " + user.getId());
+            }
 
             return switch (statusCode) {
                 case 2 -> "Payment successful.";
