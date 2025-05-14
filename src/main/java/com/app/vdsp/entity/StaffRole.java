@@ -25,11 +25,11 @@ public class StaffRole {
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "staff_id", nullable = false, referencedColumnName = "id")
     private Staff staff;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     private Role role;
 
@@ -37,6 +37,6 @@ public class StaffRole {
     @Column(name = "assign_status", nullable = false, length = 20)
     private StaffAssignStatus assignStatus;
 
-    @Column(name = "assigned_at", updatable = false)
+    @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
 }
