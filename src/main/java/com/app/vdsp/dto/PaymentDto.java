@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 public class PaymentDto {
 
+    private Long id;
+
     private Long reservationId;
 
     private String merchantId;
@@ -43,7 +45,4 @@ public class PaymentDto {
 
     private String cardExpiry;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 }

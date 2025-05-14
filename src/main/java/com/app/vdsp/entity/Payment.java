@@ -41,7 +41,7 @@ public class Payment {
     private String payhereCurrency;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_code", nullable = false)
+    @Column(name = "status_code", nullable = false, length = 20)
     private PaymentStatus paymentStatus;
 
     @Column(name = "md5_signature", nullable = false, length = 255)
@@ -69,13 +69,10 @@ public class Payment {
     private String cardExpiry;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @org.springframework.data.annotation.CreatedDate
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    @org.springframework.data.annotation.LastModifiedDate
+    private LocalDateTime updatedAt;
 }

@@ -5,6 +5,7 @@ import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.service.PaymentService;
 import com.app.vdsp.utils.PayHereService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,6 +16,9 @@ public class PayHereController {
 
     private final PayHereService payHereService;
     private final PaymentService paymentService;
+
+    @Value("${external.base.url}")
+    private String externalBaseUrl;
 
     @Autowired
     public PayHereController(PayHereService payHereService, PaymentService paymentService) {
@@ -35,6 +39,7 @@ public class PayHereController {
 
     @PostMapping("/notify")
     public String notify(@RequestParam Map<String, String> params) {
+        System.out.println("Notify endpoint hit via: " + externalBaseUrl + "/api/payment/notify");
         return paymentService.processPaymentNotification(params);
     }
 }

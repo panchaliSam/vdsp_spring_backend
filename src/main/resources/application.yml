@@ -3,6 +3,10 @@ server:
   servlet:
     context-path: "/"
 
+external:
+  base:
+    url: https://4e3e-112-134-172-218.ngrok-free.app
+
 spring:
   application :
     name: vdsp
