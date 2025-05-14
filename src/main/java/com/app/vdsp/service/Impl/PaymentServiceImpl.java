@@ -1,14 +1,8 @@
 package com.app.vdsp.service.Impl;
 
-import com.app.vdsp.entity.Payment;
-import com.app.vdsp.entity.PaymentApproval;
-import com.app.vdsp.entity.Reservation;
-import com.app.vdsp.entity.User;
+import com.app.vdsp.entity.*;
 import com.app.vdsp.helpers.AuthorizationHelper;
-import com.app.vdsp.repository.PaymentApprovalRepository;
-import com.app.vdsp.repository.PaymentRepository;
-import com.app.vdsp.repository.ReservationRepository;
-import com.app.vdsp.repository.UserRepository;
+import com.app.vdsp.repository.*;
 import com.app.vdsp.service.PaymentService;
 import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.utils.PayHereService;
@@ -25,15 +19,22 @@ public class PaymentServiceImpl implements PaymentService {
     private final PayHereService payHereService;
     private final ReservationRepository reservationRepository;
     private final PaymentApprovalRepository paymentApprovalRepository;
-    private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
+    private final EventRepository eventRepository;
 
     @Autowired
-    public PaymentServiceImpl(PaymentRepository paymentRepository, PayHereService payHereService, ReservationRepository reservationRepository, PaymentApprovalRepository paymentApprovalRepository, UserRepository userRepository) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository,
+                              PayHereService payHereService,
+                              ReservationRepository reservationRepository,
+                              PaymentApprovalRepository paymentApprovalRepository,
+                              NotificationRepository notificationRepository,
+                              EventRepository eventRepository) {
         this.paymentRepository = paymentRepository;
         this.payHereService = payHereService;
         this.reservationRepository = reservationRepository;
         this.paymentApprovalRepository = paymentApprovalRepository;
-        this.userRepository = userRepository;
+        this.notificationRepository = notificationRepository;
+        this.eventRepository = eventRepository;
     }
 
     @Override
@@ -100,12 +101,27 @@ public class PaymentServiceImpl implements PaymentService {
                 PaymentApproval approval = PaymentApproval.builder()
                         .payment(payment)
                         .user(user)
-                        .status(false)
+                        .status(true)
                         .approvedAt(null)
                         .build();
 
                 paymentApprovalRepository.save(approval);
                 System.out.println("PaymentApproval created for user ID: " + user.getId());
+
+                Notification notification = Notification.builder()
+                        .userId(user.getId())
+                        .title("Payment Received")
+                        .message("Your reservation has been approved after successful payment.")
+                        .build();
+                notificationRepository.save(notification);
+                System.out.println("Notification created for user ID: " + user.getId());
+
+                Event event = Event.builder()
+                        .reservation(reservation)
+                        .eventDate(reservation.getEventDate())
+                        .build();
+                eventRepository.save(event);
+                System.out.println("Event created for reservation ID: " + reservation.getId());
             }
 
             return switch (statusCode) {
@@ -128,5 +144,4 @@ public class PaymentServiceImpl implements PaymentService {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         return paymentRepository.existsByReservationIdAndPaymentStatus(reservationId, PaymentStatus.SUCCESS);
     }
-
 }
