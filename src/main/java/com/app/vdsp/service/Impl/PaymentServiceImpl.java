@@ -2,6 +2,7 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.entity.Payment;
 import com.app.vdsp.entity.Reservation;
+import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.PaymentRepository;
 import com.app.vdsp.repository.ReservationRepository;
 import com.app.vdsp.service.PaymentService;
@@ -30,8 +31,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String processPaymentNotification(Map<String, String> params) {
         try {
-            // 1. Extract and log all incoming values
-            System.out.println("🔔 PayHere Notification Received: " + params);
+            System.out.println(" PayHere Notification Received: " + params);
 
             String merchantId = params.get("merchant_id");
             String orderId = params.get("order_id");
@@ -45,11 +45,10 @@ public class PaymentServiceImpl implements PaymentService {
             try {
                 statusCode = Integer.parseInt(statusCodeStr);
             } catch (NumberFormatException e) {
-                System.err.println("❌ Invalid status_code format: " + statusCodeStr);
+                System.err.println("Invalid status_code format: " + statusCodeStr);
                 return "Invalid status_code format.";
             }
 
-            // 2. Validate signature
             boolean isValid = payHereService.verifyPaymentStatus(
                     merchantId,
                     orderId,
@@ -60,15 +59,13 @@ public class PaymentServiceImpl implements PaymentService {
             );
 
             if (!isValid) {
-                System.err.println("❌ Signature verification failed.");
+                System.err.println("Signature verification failed.");
                 return "Invalid signature.";
             }
 
-            // 3. Retrieve reservation by order ID
             Reservation reservation = reservationRepository.findById(Long.parseLong(orderId))
-                    .orElseThrow(() -> new IllegalArgumentException("❌ Reservation not found for ID: " + orderId));
+                    .orElseThrow(() -> new IllegalArgumentException("Reservation not found for ID: " + orderId));
 
-            // 4. Build payment entity
             Payment payment = Payment.builder()
                     .merchantId(merchantId)
                     .paymentId(paymentId)
@@ -86,9 +83,8 @@ public class PaymentServiceImpl implements PaymentService {
                     .cardExpiry(params.getOrDefault("card_expiry", null))
                     .build();
 
-            // 5. Save to DB and log result
             paymentRepository.save(payment);
-            System.out.println("✅ Payment saved for order ID: " + orderId);
+            System.out.println("Payment saved for order ID: " + orderId);
 
             return switch (statusCode) {
                 case 2 -> "Payment successful.";
@@ -101,8 +97,14 @@ public class PaymentServiceImpl implements PaymentService {
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return "❌ Error occurred while processing payment: " + ex.getMessage();
+            return "Error occurred while processing payment: " + ex.getMessage();
         }
+    }
+
+    @Override
+    public boolean isAlreadyPaid(Long reservationId, String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        return paymentRepository.existsByReservationIdAndPaymentStatus(reservationId, PaymentStatus.SUCCESS);
     }
 
 }

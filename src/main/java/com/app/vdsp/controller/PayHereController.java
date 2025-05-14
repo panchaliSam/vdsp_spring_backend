@@ -6,6 +6,7 @@ import com.app.vdsp.service.PaymentService;
 import com.app.vdsp.utils.PayHereService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -41,5 +42,10 @@ public class PayHereController {
     public String notify(@RequestParam Map<String, String> params) {
         System.out.println("Notify endpoint hit via: " + externalBaseUrl + "/api/payment/notify");
         return paymentService.processPaymentNotification(params);
+    }
+
+    @GetMapping("/already-paid/{reservationId}")
+    public boolean isAlreadyPaid(@PathVariable Long reservationId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+        return paymentService.isAlreadyPaid(reservationId, authHeader);
     }
 }
