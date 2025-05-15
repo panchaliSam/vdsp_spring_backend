@@ -3,14 +3,17 @@ package com.app.vdsp.service.Impl;
 import com.app.vdsp.entity.*;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.*;
+import com.app.vdsp.service.EmailService;
 import com.app.vdsp.service.PaymentService;
 import com.app.vdsp.type.AlbumStatus;
 import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.utils.PayHereService;
+import com.app.vdsp.utils.PdfGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -23,6 +26,9 @@ public class PaymentServiceImpl implements PaymentService {
     private final NotificationRepository notificationRepository;
     private final EventRepository eventRepository;
     private final EventStaffRepository eventStaffRepository;
+    private final PdfGeneratorUtil pdfGeneratorUtil;
+    private final EmailService emailService;
+    private final ReservationDocumentRepository reservationDocumentRepository;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository,
@@ -30,7 +36,7 @@ public class PaymentServiceImpl implements PaymentService {
                               ReservationRepository reservationRepository,
                               PaymentApprovalRepository paymentApprovalRepository,
                               NotificationRepository notificationRepository,
-                              EventRepository eventRepository, EventStaffRepository eventStaffRepository) {
+                              EventRepository eventRepository, EventStaffRepository eventStaffRepository, PdfGeneratorUtil pdfGeneratorUtil, EmailService emailService, ReservationDocumentRepository reservationDocumentRepository) {
         this.paymentRepository = paymentRepository;
         this.payHereService = payHereService;
         this.reservationRepository = reservationRepository;
@@ -38,6 +44,9 @@ public class PaymentServiceImpl implements PaymentService {
         this.notificationRepository = notificationRepository;
         this.eventRepository = eventRepository;
         this.eventStaffRepository = eventStaffRepository;
+        this.pdfGeneratorUtil = pdfGeneratorUtil;
+        this.emailService = emailService;
+        this.reservationDocumentRepository = reservationDocumentRepository;
     }
 
     @Override
@@ -135,6 +144,27 @@ public class PaymentServiceImpl implements PaymentService {
                         .build();
                 eventStaffRepository.save(eventStaff);
                 System.out.println("EventStaff created for event ID: " + event.getId());
+
+                byte[] pdfBytes = pdfGeneratorUtil.generateReservationConfirmationPdf(reservation);
+
+                // Save to DB or filesystem (DB in this case)
+                ReservationDocument confirmationDoc = ReservationDocument.builder()
+                        .reservation(reservation)
+                        .name("Reservation Confirmation Letter")
+                        .mimeType("application/pdf")
+                        .data(pdfBytes)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                reservationDocumentRepository.save(confirmationDoc);
+
+                // Send email to user
+                emailService.sendEmailWithAttachment(
+                        user.getEmail(),
+                        "Reservation Confirmation",
+                        "Your reservation has been confirmed. Please find the confirmation letter attached.",
+                        pdfBytes,
+                        "Reservation_Confirmation_" + reservation.getId() + ".pdf"
+                );
             }
 
             return switch (statusCode) {
