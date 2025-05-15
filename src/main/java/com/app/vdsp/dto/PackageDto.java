@@ -17,6 +17,8 @@ import java.math.BigDecimal;
 @Builder
 public class PackageDto {
 
+    private Long id;
+
     @NotBlank(message = "Package name cannot be blank")
     private String name;
 
@@ -29,6 +31,7 @@ public class PackageDto {
 
     public static PackageDto fromEntity(ReservationPackage packageEntity) {
         return PackageDto.builder()
+                .id(packageEntity.getId())
                 .name(packageEntity.getName())
                 .description(packageEntity.getDescription())
                 .price(packageEntity.getPrice())
