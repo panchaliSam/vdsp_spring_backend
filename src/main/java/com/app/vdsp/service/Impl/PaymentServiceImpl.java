@@ -4,6 +4,7 @@ import com.app.vdsp.entity.*;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.*;
 import com.app.vdsp.service.PaymentService;
+import com.app.vdsp.type.AlbumStatus;
 import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.utils.PayHereService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentApprovalRepository paymentApprovalRepository;
     private final NotificationRepository notificationRepository;
     private final EventRepository eventRepository;
+    private final EventStaffRepository eventStaffRepository;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository,
@@ -28,13 +30,14 @@ public class PaymentServiceImpl implements PaymentService {
                               ReservationRepository reservationRepository,
                               PaymentApprovalRepository paymentApprovalRepository,
                               NotificationRepository notificationRepository,
-                              EventRepository eventRepository) {
+                              EventRepository eventRepository, EventStaffRepository eventStaffRepository) {
         this.paymentRepository = paymentRepository;
         this.payHereService = payHereService;
         this.reservationRepository = reservationRepository;
         this.paymentApprovalRepository = paymentApprovalRepository;
         this.notificationRepository = notificationRepository;
         this.eventRepository = eventRepository;
+        this.eventStaffRepository = eventStaffRepository;
     }
 
     @Override
@@ -119,9 +122,19 @@ public class PaymentServiceImpl implements PaymentService {
                 Event event = Event.builder()
                         .reservation(reservation)
                         .eventDate(reservation.getEventDate())
+                        .albumStatus(AlbumStatus.IN_PROGRESS) 
                         .build();
                 eventRepository.save(event);
                 System.out.println("Event created for reservation ID: " + reservation.getId());
+
+                EventStaff eventStaff = EventStaff.builder()
+                        .event(event)
+                        .staff(null)
+                        .eventDate(reservation.getEventDate())
+                        .assignedAt(null)
+                        .build();
+                eventStaffRepository.save(eventStaff);
+                System.out.println("EventStaff created for event ID: " + event.getId());
             }
 
             return switch (statusCode) {

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -29,10 +30,12 @@ public class EventStaff implements Serializable {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @NotNull(message = "Staff cannot be null")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "staff_id", nullable = false)
+    @JoinColumn(name = "staff_id")
     private Staff staff;
+
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
 
     @NotNull(message = "Event date cannot be null")
     @Column(name = "event_date", nullable = false)
@@ -40,9 +43,13 @@ public class EventStaff implements Serializable {
 
     @PrePersist
     @PreUpdate
-    private void syncEventDate() {
+    private void syncEventDateAndAssignment() {
         if (this.event != null) {
             this.eventDate = this.event.getEventDate();
+        }
+
+        if (this.staff != null && this.assignedAt == null) {
+            this.assignedAt = LocalDateTime.now();
         }
     }
 }

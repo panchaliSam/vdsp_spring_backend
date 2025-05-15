@@ -1,5 +1,6 @@
 package com.app.vdsp.entity;
 
+import com.app.vdsp.type.AlbumStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,8 @@ public class Event {
     @NotNull(message = "Event date cannot be null")
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
+
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "album_status", nullable = false)
+    private AlbumStatus albumStatus = AlbumStatus.IN_PROGRESS;
 }
