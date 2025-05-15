@@ -22,7 +22,7 @@ public class EventStaffServiceImpl implements EventStaffService {
 
     private final EventStaffRepository eventStaffRepository;
     private final StaffRepository staffRepository;
-
+    private final AuthorizationHelper authorizationHelper;
 
     @Override
     public List<EventStaffDto> getAllEventStaff(String authHeader) {
@@ -81,15 +81,14 @@ public class EventStaffServiceImpl implements EventStaffService {
 
     @Override
     public List<EventStaffDto> getEventsForLoggedInStaff(String authHeader) {
-        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        Long userId = AuthorizationHelper.extractUserId(authHeader);
+        authorizationHelper.ensureAuthorizationHeader(authHeader);
+        Long userId = authorizationHelper.extractUserId(authHeader);
 
         Staff staff = staffRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff profile not found for user"));
 
-        List<EventStaff> assignments = eventStaffRepository.findByStaffId(staff.getId());
-
-        return assignments.stream()
+        return eventStaffRepository.findByStaffId(staff.getId())
+                .stream()
                 .map(EventStaffDto::fromEntity)
                 .collect(Collectors.toList());
     }

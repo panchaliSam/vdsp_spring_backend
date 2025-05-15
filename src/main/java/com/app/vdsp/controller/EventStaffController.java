@@ -39,6 +39,13 @@ public class EventStaffController {
         return ResponseEntity.ok(eventStaffService.assignStaffByName(id, staffName, authHeader));
     }
 
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @GetMapping("/my-events")
+    public ResponseEntity<List<EventStaffDto>> getMyAssignedEvents(
+            @RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(eventStaffService.getEventsForLoggedInStaff(authHeader));
+    }
+
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id,
@@ -47,10 +54,4 @@ public class EventStaffController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole('ROLE_STAFF')")
-    @GetMapping("/v")
-    public ResponseEntity<List<EventStaffDto>> getMyAssignedEvents(
-            @RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(eventStaffService.getEventsForLoggedInStaff(authHeader));
-    }
 }
