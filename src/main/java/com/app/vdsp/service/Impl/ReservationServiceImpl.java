@@ -14,6 +14,7 @@ import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.ReservationService;
 import com.app.vdsp.type.SessionType;
 import com.app.vdsp.utils.JWTService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,7 @@ public class ReservationServiceImpl implements ReservationService {
         this.reservationApprovalRepository = reservationApprovalRepository;
     }
 
+    @Transactional
     @Override
     public ReservationDto createReservation(ReservationDto reservationDto, String authorizationHeader) {
         log.info("Creating reservation with authorization header: {}", authorizationHeader);
@@ -83,6 +85,15 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setSessionType(sessionType);
             reservation.setCreatedAt(LocalDateTime.now());
             reservation.setUpdatedAt(LocalDateTime.now());
+
+            List<Reservation> conflicts = reservationRepository.findConflictingReservationsWithLock(
+                    reservationDto.getEventDate(),
+                    sessionType
+            );
+
+            if (!conflicts.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Time slot already reserved");
+            }
 
             reservationRepository.save(reservation);
 
@@ -178,4 +189,5 @@ public class ReservationServiceImpl implements ReservationService {
 
         return reservedDates;
     }
+
 }
