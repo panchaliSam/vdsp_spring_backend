@@ -86,9 +86,17 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setCreatedAt(LocalDateTime.now());
             reservation.setUpdatedAt(LocalDateTime.now());
 
+            List<SessionType> conflictTypes;
+
+            switch (sessionType) {
+                case FULLDAY_SESSION -> conflictTypes = List.of(SessionType.FULLDAY_SESSION, SessionType.MORNING_SESSION, SessionType.EVENING_SESSION);
+                case MORNING_SESSION -> conflictTypes = List.of(SessionType.FULLDAY_SESSION, SessionType.MORNING_SESSION);
+                case EVENING_SESSION -> conflictTypes = List.of(SessionType.FULLDAY_SESSION, SessionType.EVENING_SESSION);
+                default -> throw new IllegalStateException("Unexpected value: " + sessionType);
+            }
+
             List<Reservation> conflicts = reservationRepository.findConflictingReservationsWithLock(
-                    reservationDto.getEventDate(),
-                    sessionType
+                    reservationDto.getEventDate(), conflictTypes
             );
 
             if (!conflicts.isEmpty()) {

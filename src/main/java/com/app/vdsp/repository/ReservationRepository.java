@@ -13,11 +13,9 @@ import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByEventDate(LocalDate eventDate);
-    @Query("SELECT r FROM Reservation r WHERE r.eventDate = :eventDate AND " +
-            "((:sessionType = 'FULLDAY_SESSION') OR " +
-            " (:sessionType = 'MORNING_SESSION' AND r.sessionType IN ('FULLDAY_SESSION', 'MORNING_SESSION')) OR " +
-            " (:sessionType = 'EVENING_SESSION' AND r.sessionType IN ('FULLDAY_SESSION', 'EVENING_SESSION')))")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Reservation r WHERE r.eventDate = :eventDate AND r.sessionType IN :sessionTypes")
     List<Reservation> findConflictingReservationsWithLock(
             @Param("eventDate") LocalDate eventDate,
-            @Param("sessionType") SessionType sessionType);
+            @Param("sessionTypes") List<SessionType> sessionTypes);
 }
