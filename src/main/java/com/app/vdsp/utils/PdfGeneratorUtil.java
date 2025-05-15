@@ -7,6 +7,7 @@ import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 
 @Component
@@ -22,7 +23,24 @@ public class PdfGeneratorUtil {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
+        try {
+            InputStream logoStream = getClass().getResourceAsStream("/static/logo.png");
+            if (logoStream != null) {
+                byte[] logoBytes = logoStream.readAllBytes();
+                Image logo = Image.getInstance(logoBytes);
+                logo.scaleToFit(120, 120);
+                logo.setAlignment(Image.ALIGN_CENTER);
+                document.add(logo);
+                document.add(new Paragraph(" "));
+            } else {
+                System.err.println("Logo not found at /static/logo.png");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         document.add(new Paragraph("Reservation Confirmation Letter", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)));
+        document.add(new Paragraph("Vidura De Silva Photography", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
         document.add(new Paragraph(" "));
         document.add(new Paragraph("Dear " + user.getFirstName() + " " + user.getLastName() + ","));
         document.add(new Paragraph(" "));
