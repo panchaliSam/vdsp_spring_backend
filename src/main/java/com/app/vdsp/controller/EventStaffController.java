@@ -46,4 +46,11 @@ public class EventStaffController {
         eventStaffService.delete(id, authHeader);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @GetMapping("/v")
+    public ResponseEntity<List<EventStaffDto>> getMyAssignedEvents(
+            @RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(eventStaffService.getEventsForLoggedInStaff(authHeader));
+    }
 }
