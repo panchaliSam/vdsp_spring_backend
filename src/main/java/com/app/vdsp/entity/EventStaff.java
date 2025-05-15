@@ -26,11 +26,11 @@ public class EventStaff implements Serializable {
     private Long id;
 
     @NotNull(message = "Event cannot be null")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "staff_id")
     private Staff staff;
 
