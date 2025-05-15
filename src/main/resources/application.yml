@@ -5,7 +5,7 @@ server:
 
 external:
   base:
-    url: https://c327-112-134-172-218.ngrok-free.app
+    url: ${NGROK_FORWARD_URL}
 
 spring:
   application :
