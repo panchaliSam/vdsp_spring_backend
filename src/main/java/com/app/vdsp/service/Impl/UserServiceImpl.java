@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto registerUser(UserDto userDto) {
+    public ApiResponse<UserDto> registerUser(UserDto userDto) {
         log.info("Registering user with email: {}", userDto.getEmail());
 
         if (userRepository.existsByEmail(userDto.getEmail())) {
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
             }
 
             log.info("User registered successfully with email: {}", userDto.getEmail());
-            return userDto;
+            return new ApiResponse<>(true, "User registered successfully", userDto);
         } catch (Exception e) {
             log.error("Error occurred during registration for email {}: {}", userDto.getEmail(), e.toString());
             throw new RuntimeException("User registration failed", e);
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TokenResponseDto loginUser(String email, String password) {
+    public ApiResponse<TokenResponseDto> loginUser(String email, String password) {
         log.info("Attempting to log in user with email: {}", email);
 
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -114,12 +114,13 @@ public class UserServiceImpl implements UserService {
                // refreshTokenRepository.revokeAllActiveTokensForUser(user.getId());
                 refreshTokenRepository.save(refreshToken);
 
-                // Build and return the response
-                return TokenResponseDto.builder()
+                TokenResponseDto tokenResponseDto = TokenResponseDto.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshTokenValue)
                         .userDetails(user)
                         .build();
+
+                return new ApiResponse<>(true, "Login successful", tokenResponseDto);
             } else {
                 log.warn("Login failed for email {}: Invalid password", email);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
@@ -139,34 +140,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        try {
-            return userRepository.findAll();
-        } catch (Exception e) {
-            log.error("UserServiceImpl | getAllUsers | Exception: {}", e.toString());
-            throw new RuntimeException(e);
-        }
+    public ApiResponse<List<User>> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return new ApiResponse<>(true, "Fetched all users", users);
     }
 
     @Override
-    public User getUserById(Long id) {
-        try{
-            Optional<User> user = userRepository.findById(id);
-            if(user.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-            }
-            return user.get();
-        } catch (Exception e) {
-            if(e instanceof ResponseStatusException){
-                throw (ResponseStatusException) e;
-            }
-            log.error("UserServiceImpl | getUserById | Exception: {}", e.toString());
-            throw new RuntimeException(e);
-        }
+    public ApiResponse<User> getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return new ApiResponse<>(true, "User fetched successfully", user);
     }
 
     @Override
-    public void updateUser(Long id, UserDto updatedUser) {
+    public ApiResponse<String> updateUser(Long id, UserDto updatedUser)  {
         try{
             Optional<User> existUser = userRepository.findById(id);
             if(existUser.isEmpty()){
@@ -184,6 +171,7 @@ public class UserServiceImpl implements UserService {
             user.setRole(updatedUser.getRole());
 
             userRepository.save(user);
+            return new ApiResponse<>(true, "User updated successfully", null);
 
         } catch (Exception e) {
             if(e instanceof ResponseStatusException){
@@ -195,13 +183,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public ApiResponse<String> deleteUser(Long id) {
         try{
             Optional<User> existUser = userRepository.findById(id);
             if(existUser.isEmpty()){
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
             }
             userRepository.deleteById(id);
+            return new ApiResponse<>(true, "User deleted successfully", null);
         } catch (Exception e) {
             if (e instanceof ResponseStatusException) {
                 throw (ResponseStatusException) e;
@@ -212,7 +201,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logoutUser(String refreshToken) {
+    public ApiResponse<String> logoutUser(String refreshToken){
         log.info("Logging out user with refresh token: {}", refreshToken);
         Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshToken);
 
@@ -224,10 +213,11 @@ public class UserServiceImpl implements UserService {
         token.setRevoked(true);
         refreshTokenRepository.save(token);
         log.info("Refresh token revoked successfully.");
+        return new ApiResponse<>(true, "Logged out successfully", null);
     }
 
     @Override
-    public String refreshAccessToken(String refreshToken) {
+    public ApiResponse<String> refreshAccessToken(String refreshToken) {
         log.info("Refreshing access token with refresh token: {}", refreshToken);
         Optional<RefreshToken> tokenOptional = refreshTokenRepository.findByToken(refreshToken);
 
@@ -246,6 +236,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        return jwtService.generateToken(user);
+        String accessToken = jwtService.generateToken(user);
+        return new ApiResponse<>(true, "Token refreshed", accessToken);
     }
 }

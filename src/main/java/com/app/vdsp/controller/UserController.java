@@ -2,6 +2,7 @@ package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.RoleType;
@@ -27,63 +28,61 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody @Validated UserDto user) {
-        return ResponseEntity.of(Optional.of(userService.registerUser(user)));
+    public ResponseEntity<ApiResponse<UserDto>> register(@RequestBody @Validated UserDto user) {
+        ApiResponse<UserDto> response = userService.registerUser(user);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST).body(response);
     }
 
     @PostMapping("/login")
-    public TokenResponseDto login(@RequestBody JsonNode user) {
-        return userService.loginUser(user.get("email").asText(), user.get("password").asText());
+    public ResponseEntity<ApiResponse<TokenResponseDto>> login(@RequestBody JsonNode user) {
+        ApiResponse<TokenResponseDto> response = userService.loginUser(user.get("email").asText(), user.get("password").asText());
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @GetMapping("/getAll")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.of(Optional.of(userService.getAllUsers()));
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'STAFF')")
-    public ResponseEntity<User> getUserById(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
         if (isAdminOrOwner(currentUser, id)) {
-            return ResponseEntity.of(Optional.of(userService.getUserById(id)));
+            return ResponseEntity.ok(userService.getUserById(id));
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, "Not authorized", null));
     }
+
     @PutMapping("/update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'STAFF')")
-    public ResponseEntity<String> updateUser(
+    public ResponseEntity<ApiResponse<String>> updateUser(
             @PathVariable Long id,
             @RequestBody @Validated UserDto updatedUser,
             @AuthenticationPrincipal User currentUser) {
         if (isAdminOrOwner(currentUser, id)) {
-            userService.updateUser(id, updatedUser);
-            return ResponseEntity.ok("User updated successfully.");
+            return ResponseEntity.ok(userService.updateUser(id, updatedUser));
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this user.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, "Not authorized", null));
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.ok("User deleted successfully.");
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.deleteUser(id));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody JsonNode request) {
+    public ResponseEntity<ApiResponse<String>> logout(@RequestBody JsonNode request) {
         String refreshToken = request.get("refresh_token").asText();
-        userService.logoutUser(refreshToken);
-        return ResponseEntity.ok("Logged out successfully");
+        return ResponseEntity.ok(userService.logoutUser(refreshToken));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<String> refreshToken(@RequestBody JsonNode request) {
+    public ResponseEntity<ApiResponse<String>> refreshToken(@RequestBody JsonNode request) {
         String refreshToken = request.get("refresh_token").asText();
-        String accessToken = userService.refreshAccessToken(refreshToken);
-        return ResponseEntity.ok(accessToken);
+        return ResponseEntity.ok(userService.refreshAccessToken(refreshToken));
     }
-
 
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
         return currentUser.getRole() == RoleType.ROLE_ADMIN || currentUser.getId().equals(targetUserId);

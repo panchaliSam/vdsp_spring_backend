@@ -1,6 +1,6 @@
 package com.app.vdsp.advice;
 
-import com.app.vdsp.dto.ErrorDto;
+import com.app.vdsp.entity.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,23 +11,20 @@ import org.springframework.web.server.ResponseStatusException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorDto> handleResponseStatusException(ResponseStatusException exception) {
-        return ResponseEntity
-                .status(exception.getStatusCode())
-                .body(new ErrorDto(exception.getStatusCode().value(), exception.getReason()));
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(ResponseStatusException ex) {
+        ApiResponse<Void> body = new ApiResponse<>(false, ex.getReason(), null);
+        return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<ErrorDto> handleNullPointerException() {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorDto(500, "Null value encountered!"));
+    public ResponseEntity<ApiResponse<Void>> handleNPE(NullPointerException ex) {
+        ApiResponse<Void> body = new ApiResponse<>(false, "Null value encountered!", null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorDto> handleGenericException(Exception exception) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorDto(500, exception.getMessage()));
+    public ResponseEntity<ApiResponse<Void>> handleAll(Exception ex) {
+        ApiResponse<Void> body = new ApiResponse<>(false, ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }
