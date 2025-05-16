@@ -1,5 +1,6 @@
 package com.app.vdsp.dto;
 
+import com.app.vdsp.entity.Staff;
 import com.app.vdsp.entity.StaffRole;
 import com.app.vdsp.type.StaffAssignStatus;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 public class StaffRoleDto {
     private Long id;
-    private Long staffId;
+    private StaffDto staff;
     private String roleName;
     private StaffAssignStatus assignStatus;
     private LocalDateTime assignedAt;
@@ -23,7 +24,7 @@ public class StaffRoleDto {
     public static StaffRoleDto fromEntity(StaffRole staffRole) {
         return StaffRoleDto.builder()
                 .id(staffRole.getId())
-                .staffId(staffRole.getStaff().getId())
+                .staff(StaffDto.fromEntity(staffRole.getStaff()))
                 .roleName(staffRole.getRole() != null ? staffRole.getRole().getRoleName() : null)
                 .assignStatus(staffRole.getAssignStatus())
                 .assignedAt(staffRole.getAssignedAt())

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,5 +39,11 @@ public class EventController {
 
         EventDto updated = eventService.updateAlbumStatus(id, status, authHeader);
         return ResponseEntity.ok(updated);
+    }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
+    @GetMapping("/getAll")
+    public ResponseEntity<List<EventDto>> getAllEvents(
+            @RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(eventService.getAllEvents(authHeader));
     }
 }

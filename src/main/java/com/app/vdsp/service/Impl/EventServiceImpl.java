@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
@@ -32,5 +35,14 @@ public class EventServiceImpl implements EventService {
 
         log.info("Updated album status for event ID {}: {}", id, albumStatus);
         return EventDto.fromEntity(updated);
+    }
+    @Override
+    public List<EventDto> getAllEvents(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        log.info("Fetching all events");
+        return eventRepository.findAll()
+                .stream()
+                .map(EventDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

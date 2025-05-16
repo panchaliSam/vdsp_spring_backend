@@ -16,16 +16,16 @@ import java.time.LocalDateTime;
 public class EventStaffDto {
 
     private Long id;
-    private Long eventId;
-    private Long staffId;
+    private EventDto eventDto;
+    private StaffDto staff;
     private LocalDate eventDate;
     private LocalDateTime assignedAt;
 
     public static EventStaffDto fromEntity(EventStaff eventStaff) {
         return EventStaffDto.builder()
                 .id(eventStaff.getId())
-                .eventId(eventStaff.getEvent().getId())
-                .staffId(eventStaff.getStaff() != null ? eventStaff.getStaff().getId() : null)
+                .eventDto(eventStaff.getEvent() != null ? EventDto.fromEntity(eventStaff.getEvent()) : null) // Map Event to EventDto
+                .staff(eventStaff.getStaff() != null ? StaffDto.fromEntity(eventStaff.getStaff()) : null) // Map Staff to StaffDto
                 .eventDate(eventStaff.getEventDate())
                 .assignedAt(eventStaff.getAssignedAt())
                 .build();

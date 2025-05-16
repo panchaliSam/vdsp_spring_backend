@@ -23,7 +23,7 @@ public class Event {
     private Long id;
 
     @NotNull(message = "Reservation cannot be null")
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
