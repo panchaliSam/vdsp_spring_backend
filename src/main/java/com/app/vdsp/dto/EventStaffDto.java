@@ -24,8 +24,8 @@ public class EventStaffDto {
     public static EventStaffDto fromEntity(EventStaff eventStaff) {
         return EventStaffDto.builder()
                 .id(eventStaff.getId())
-                .eventDto(eventStaff.getEvent() != null ? EventDto.fromEntity(eventStaff.getEvent()) : null) // Map Event to EventDto
-                .staff(eventStaff.getStaff() != null ? StaffDto.fromEntity(eventStaff.getStaff()) : null) // Map Staff to StaffDto
+                .eventDto(eventStaff.getEvent() != null ? EventDto.fromEntity(eventStaff.getEvent()) : null)
+                .staff(eventStaff.getStaff() != null ? StaffDto.fromEntity(eventStaff.getStaff()) : null)
                 .eventDate(eventStaff.getEventDate())
                 .assignedAt(eventStaff.getAssignedAt())
                 .build();
