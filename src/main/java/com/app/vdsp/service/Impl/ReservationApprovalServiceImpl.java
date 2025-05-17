@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.repository.ReservationApprovalRepository;
 import com.app.vdsp.service.ReservationApprovalService;
@@ -30,23 +31,25 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
     }
 
     @Override
-    public List<ReservationApprovalDto> getAllReservationApprovals() {
-        try{
+    public ApiResponse<List<ReservationApprovalDto>> getAllReservationApprovals() {
+        try {
             List<ReservationApproval> reservationApprovals = reservationApprovalRepository.findAll();
             log.info("Reservation approvals found: {}", reservationApprovals);
 
-            return reservationApprovals.stream()
+            List<ReservationApprovalDto> result = reservationApprovals.stream()
                     .map(ReservationApprovalDto::fromEntity)
                     .collect(Collectors.toList());
+
+            return new ApiResponse<>(true, "Fetched all reservation approvals", result);
         } catch (Exception e) {
-                log.error("Error while getting reservation approvals", e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Error while getting reservation approvals", e);
+            log.error("Error while getting reservation approvals", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error while getting reservation approvals", e);
         }
     }
 
     @Override
-    public ReservationApprovalDto updateApprovalStatus(Long id, ApprovalStatus status) {
+    public ApiResponse<ReservationApprovalDto> updateApprovalStatus(Long id, ApprovalStatus status) {
         try {
             ReservationApproval reservationApproval = reservationApprovalRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation approval not found"));
@@ -57,7 +60,7 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             ReservationApproval updatedApproval = reservationApprovalRepository.save(reservationApproval);
             log.info("Reservation approval updated: {}", updatedApproval);
 
-            return ReservationApprovalDto.fromEntity(updatedApproval);
+            return new ApiResponse<>(true, "Reservation approval status updated", ReservationApprovalDto.fromEntity(updatedApproval));
         } catch (Exception e) {
             log.error("Error while updating reservation approval status", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -66,7 +69,7 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
     }
 
     @Override
-    public List<ReservationApprovalDto> getApprovedReservations(String authorizationHeader) {
+    public ApiResponse<List<ReservationApprovalDto>> getApprovedReservations(String authorizationHeader) {
         try {
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid");
@@ -78,9 +81,11 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             List<ReservationApproval> approvedReservations = reservationApprovalRepository.findByUserId(userId);
             log.info("Approved reservations for user {}: {}", userId, approvedReservations);
 
-            return approvedReservations.stream()
+            List<ReservationApprovalDto> result = approvedReservations.stream()
                     .map(ReservationApprovalDto::fromEntity)
                     .collect(Collectors.toList());
+
+            return new ApiResponse<>(true, "Fetched approved reservations for user", result);
         } catch (ResponseStatusException e) {
             log.error("Business error: {}", e.getReason(), e);
             throw e;
@@ -89,6 +94,4 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while fetching approved reservations", e);
         }
     }
-
-
 }
