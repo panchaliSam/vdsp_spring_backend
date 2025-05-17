@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.entity.User;
@@ -23,10 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,7 +48,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Transactional
     @Override
-    public ReservationDto createReservation(ReservationDto reservationDto, String authorizationHeader) {
+    public ApiResponse<ReservationDto> createReservation(ReservationDto reservationDto, String authorizationHeader) {
         log.info("Creating reservation with authorization header: {}", authorizationHeader);
 
         try {
@@ -120,7 +118,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservationDto.setPriceAmount(eventPackage.getPrice());
 
             log.info("Reservation created: {}", reservation);
-            return reservationDto;
+            return new ApiResponse<>(true, "Reservation created successfully", reservationDto);
         } catch (ResponseStatusException e) {
             log.error("Business error: {}", e.getReason(), e);
             throw e;
@@ -131,17 +129,19 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<ReservationDto> getAllReservations() {
+    public ApiResponse<List<ReservationDto>> getAllReservations() {
         try {
             List<Reservation> reservations = reservationRepository.findAll();
             log.info("All reservations: {}", reservations);
 
-            return reservations.stream()
+            List<ReservationDto> list = reservations.stream()
                     .map(reservation -> {
                         ReservationPackage reservationPackage = reservation.getEventPackage();
                         return ReservationDto.fromEntity(reservation, reservationPackage);
                     })
                     .collect(Collectors.toList());
+
+            return new ApiResponse<>(true, "Fetched all reservations", list);
         } catch (Exception e) {
             log.error("Unexpected error while getting all reservations", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -150,27 +150,24 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public Optional<ReservationDto> getReservationById(Long id) {
+    public ApiResponse<ReservationDto> getReservationById(Long id) {
         try {
             Optional<Reservation> reservation = reservationRepository.findById(id);
             if (reservation.isPresent()) {
                 log.info("Reservation found: {}", reservation.get());
-
                 ReservationPackage reservationPackage = reservation.get().getEventPackage();
-                return Optional.of(ReservationDto.fromEntity(reservation.get(), reservationPackage));
+                return new ApiResponse<>(true, "Fetched reservation successfully", ReservationDto.fromEntity(reservation.get(), reservationPackage));
             } else {
-                log.warn("Reservation not found for ID: {}", id);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found");
             }
-            return Optional.empty();
         } catch (Exception e) {
             log.error("Unexpected error while fetching reservation with ID: {}", id, e);
-            throw new RuntimeException("Unexpected error occurred while fetching reservation", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred", e);
         }
     }
 
-
     @Override
-    public Map<String, List<LocalDate>> getReservedDates(String authHeader) {
+    public ApiResponse<Map<String, List<LocalDate>>> getReservedDates(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         List<Reservation> reservations = reservationRepository.findAll();
@@ -195,7 +192,6 @@ public class ReservationServiceImpl implements ReservationService {
         reservedDates.put("fullDay", fullDaySessions);
         reservedDates.put("partial", partialSessions);
 
-        return reservedDates;
+        return new ApiResponse<>(true, "Reserved dates fetched", reservedDates);
     }
-
 }

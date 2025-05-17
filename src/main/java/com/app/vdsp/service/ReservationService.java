@@ -1,15 +1,15 @@
 package com.app.vdsp.service;
 
 import com.app.vdsp.dto.ReservationDto;
+import com.app.vdsp.entity.ApiResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public interface ReservationService {
-    ReservationDto createReservation(ReservationDto reservationDto, String authorizationHeader);
-    List<ReservationDto> getAllReservations();
-    Optional<ReservationDto> getReservationById(Long id);
-    Map<String, List<LocalDate>> getReservedDates(String authHeader);
+    ApiResponse<ReservationDto> createReservation(ReservationDto reservationDto, String authorizationHeader);
+    ApiResponse<List<ReservationDto>> getAllReservations();
+    ApiResponse<ReservationDto> getReservationById(Long id);
+    ApiResponse<Map<String, List<LocalDate>>> getReservedDates(String authHeader);
 }
