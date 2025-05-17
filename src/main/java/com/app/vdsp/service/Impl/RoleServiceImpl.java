@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.RoleDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Role;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.RoleRepository;
@@ -20,7 +21,7 @@ public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
 
     @Override
-    public RoleDto createRole(RoleDto roleDto, String authHeader) {
+    public ApiResponse<RoleDto> createRole(RoleDto roleDto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         if (roleRepository.existsByRoleName(roleDto.getRoleName())) {
@@ -32,11 +33,11 @@ public class RoleServiceImpl implements RoleService {
                 .build();
 
         Role saved = roleRepository.save(role);
-        return toDto(saved);
+        return new ApiResponse<>(true, "Role created successfully", toDto(saved));
     }
 
     @Override
-    public RoleDto updateRole(Long id, RoleDto roleDto, String authHeader) {
+    public ApiResponse<RoleDto> updateRole(Long id, RoleDto roleDto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         Role existing = roleRepository.findById(id)
@@ -44,11 +45,11 @@ public class RoleServiceImpl implements RoleService {
 
         existing.setRoleName(roleDto.getRoleName());
         Role updated = roleRepository.save(existing);
-        return toDto(updated);
+        return new ApiResponse<>(true, "Role updated successfully", toDto(updated));
     }
 
     @Override
-    public void deleteRole(Long id, String authHeader) {
+    public ApiResponse<String> deleteRole(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         if (!roleRepository.existsById(id)) {
@@ -56,21 +57,23 @@ public class RoleServiceImpl implements RoleService {
         }
 
         roleRepository.deleteById(id);
+        return new ApiResponse<>(true, "Role deleted successfully", null);
     }
 
     @Override
-    public RoleDto getRoleById(Long id) {
+    public ApiResponse<RoleDto> getRoleById(Long id) {
         return roleRepository.findById(id)
-                .map(this::toDto)
+                .map(role -> new ApiResponse<>(true, "Role fetched successfully", toDto(role)))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
     }
 
     @Override
-    public List<RoleDto> getAllRoles() {
-        return roleRepository.findAll()
+    public ApiResponse<List<RoleDto>> getAllRoles() {
+        List<RoleDto> roles = roleRepository.findAll()
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+        return new ApiResponse<>(true, "All roles fetched successfully", roles);
     }
 
     private RoleDto toDto(Role role) {

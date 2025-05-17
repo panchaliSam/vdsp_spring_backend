@@ -1,13 +1,14 @@
 package com.app.vdsp.service;
 
 import com.app.vdsp.dto.RoleDto;
+import com.app.vdsp.entity.ApiResponse;
 
 import java.util.List;
 
 public interface RoleService {
-    RoleDto createRole(RoleDto roleDto, String authHeader);
-    RoleDto updateRole(Long id, RoleDto roleDto, String authHeader);
-    void deleteRole(Long id, String authHeader);
-    RoleDto getRoleById(Long id);
-    List<RoleDto> getAllRoles();
+    ApiResponse<RoleDto> createRole(RoleDto roleDto, String authHeader);
+    ApiResponse<RoleDto> updateRole(Long id, RoleDto roleDto, String authHeader);
+    ApiResponse<String> deleteRole(Long id, String authHeader);
+    ApiResponse<RoleDto> getRoleById(Long id);
+    ApiResponse<List<RoleDto>> getAllRoles();
 }
