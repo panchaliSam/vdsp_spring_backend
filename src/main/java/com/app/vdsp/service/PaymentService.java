@@ -1,10 +1,10 @@
 package com.app.vdsp.service;
 
-import com.app.vdsp.entity.Payment;
+import com.app.vdsp.entity.ApiResponse;
 
 import java.util.Map;
 
 public interface PaymentService {
-    String processPaymentNotification(Map<String, String> params);
-    boolean isAlreadyPaid(Long reservationId, String authHeader);
+    ApiResponse<String> processPaymentNotification(Map<String, String> params);
+    ApiResponse<Boolean> isAlreadyPaid(Long reservationId, String authHeader);
 }

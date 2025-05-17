@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.PaymentApprovalDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.PaymentApprovalService;
 import com.app.vdsp.type.ApprovalStatus;
 import lombok.RequiredArgsConstructor;
@@ -25,28 +26,28 @@ public class PaymentApprovalController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/getAll")
-    public ResponseEntity<List<PaymentApprovalDto>> getAllApprovals() {
+    public ResponseEntity<ApiResponse<List<PaymentApprovalDto>>> getAllApprovals() {
         log.info("Fetching all payment approvals");
         return ResponseEntity.ok(paymentApprovalService.getAllPaymentApprovals());
     }
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("/myPaymentApprovals")
-    public ResponseEntity<List<PaymentApprovalDto>> getMyApprovals(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse<List<PaymentApprovalDto>>> getMyApprovals(@RequestHeader("Authorization") String authHeader) {
         log.info("Fetching payment approvals for current user");
         return ResponseEntity.ok(paymentApprovalService.getApprovedPayments(authHeader));
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @PatchMapping("/{id}/status")
-    public ResponseEntity<PaymentApprovalDto> updateApprovalStatus(
+    public ResponseEntity<ApiResponse<PaymentApprovalDto>> updateApprovalStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> requestBody) {
 
         String statusStr = requestBody.get("status");
         if (statusStr == null || statusStr.isBlank()) {
             log.error("Status is missing in request body");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is missing");
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Status is missing", null));
         }
 
         ApprovalStatus status;
@@ -54,11 +55,10 @@ public class PaymentApprovalController {
             status = ApprovalStatus.valueOf(statusStr.toUpperCase());
         } catch (IllegalArgumentException e) {
             log.error("Invalid status value: {}", statusStr);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status value", e);
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Invalid status value", null));
         }
 
         log.info("Updating payment approval status for ID {} to {}", id, status);
-        PaymentApprovalDto updated = paymentApprovalService.updateApprovalStatus(id, status);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(paymentApprovalService.updateApprovalStatus(id, status));
     }
 }

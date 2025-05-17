@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.EventStaffDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.EventStaff;
 import com.app.vdsp.entity.Staff;
 import com.app.vdsp.helpers.AuthorizationHelper;
@@ -25,30 +26,30 @@ public class EventStaffServiceImpl implements EventStaffService {
     private final AuthorizationHelper authorizationHelper;
 
     @Override
-    public List<EventStaffDto> getAllEventStaff(String authHeader) {
+    public ApiResponse<List<EventStaffDto>> getAllEventStaff(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        return eventStaffRepository.findAll()
+        List<EventStaffDto> data = eventStaffRepository.findAll()
                 .stream()
                 .map(EventStaffDto::fromEntity)
                 .collect(Collectors.toList());
+        return new ApiResponse<>(true, "Fetched all event staff records", data);
     }
 
     @Override
-    public EventStaffDto getById(Long id, String authHeader) {
+    public ApiResponse<EventStaffDto> getById(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         EventStaff eventStaff = eventStaffRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "EventStaff not found"));
-        return EventStaffDto.fromEntity(eventStaff);
+        return new ApiResponse<>(true, "EventStaff fetched successfully", EventStaffDto.fromEntity(eventStaff));
     }
 
     @Override
-    public EventStaffDto assignStaffByName(Long eventStaffId, String staffFullName, String authHeader) {
+    public ApiResponse<EventStaffDto> assignStaffByName(Long eventStaffId, String staffFullName, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
-        // Split name
         String[] parts = staffFullName.trim().split(" ");
         if (parts.length < 2) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Full name must include first and last name");
+            return new ApiResponse<>(false, "Full name must include first and last name", null);
         }
 
         String firstName = parts[0];
@@ -60,36 +61,38 @@ public class EventStaffServiceImpl implements EventStaffService {
         EventStaff eventStaff = eventStaffRepository.findById(eventStaffId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "EventStaff record not found"));
 
-        // Check if this staff is already assigned for the date
         boolean alreadyAssigned = eventStaffRepository.existsByStaffIdAndEventDate(staff.getId(), eventStaff.getEventDate());
         if (alreadyAssigned) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Staff already assigned for this date");
+            return new ApiResponse<>(false, "Staff already assigned for this date", null);
         }
 
         eventStaff.setStaff(staff);
         eventStaff.setAssignedAt(LocalDateTime.now());
         eventStaffRepository.save(eventStaff);
 
-        return EventStaffDto.fromEntity(eventStaff);
+        return new ApiResponse<>(true, "Staff assigned successfully", EventStaffDto.fromEntity(eventStaff));
     }
 
     @Override
-    public void delete(Long id, String authHeader) {
+    public ApiResponse<String> delete(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         eventStaffRepository.deleteById(id);
+        return new ApiResponse<>(true, "EventStaff deleted successfully", null);
     }
 
     @Override
-    public List<EventStaffDto> getEventsForLoggedInStaff(String authHeader) {
+    public ApiResponse<List<EventStaffDto>> getEventsForLoggedInStaff(String authHeader) {
         authorizationHelper.ensureAuthorizationHeader(authHeader);
         Long userId = authorizationHelper.extractUserId(authHeader);
 
         Staff staff = staffRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff profile not found for user"));
 
-        return eventStaffRepository.findByStaffId(staff.getId())
+        List<EventStaffDto> data = eventStaffRepository.findByStaffId(staff.getId())
                 .stream()
                 .map(EventStaffDto::fromEntity)
                 .collect(Collectors.toList());
+
+        return new ApiResponse<>(true, "Fetched events for logged-in staff", data);
     }
 }

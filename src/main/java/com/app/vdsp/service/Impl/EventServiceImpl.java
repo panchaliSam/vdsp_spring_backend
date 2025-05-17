@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.EventDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Event;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.EventRepository;
@@ -24,7 +25,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
 
     @Override
-    public EventDto updateAlbumStatus(Long id, AlbumStatus albumStatus, String authHeader) {
+    public ApiResponse<EventDto> updateAlbumStatus(Long id, AlbumStatus albumStatus, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         Event event = eventRepository.findById(id)
@@ -34,15 +35,17 @@ public class EventServiceImpl implements EventService {
         Event updated = eventRepository.save(event);
 
         log.info("Updated album status for event ID {}: {}", id, albumStatus);
-        return EventDto.fromEntity(updated);
+        return new ApiResponse<>(true, "Album status updated successfully", EventDto.fromEntity(updated));
     }
+
     @Override
-    public List<EventDto> getAllEvents(String authHeader) {
+    public ApiResponse<List<EventDto>> getAllEvents(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         log.info("Fetching all events");
-        return eventRepository.findAll()
+        List<EventDto> events = eventRepository.findAll()
                 .stream()
                 .map(EventDto::fromEntity)
                 .collect(Collectors.toList());
+        return new ApiResponse<>(true, "Fetched all events", events);
     }
 }

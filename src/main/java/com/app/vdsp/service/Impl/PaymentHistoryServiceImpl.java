@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.PaymentHistoryDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Payment;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.PaymentRepository;
@@ -22,37 +23,41 @@ public class PaymentHistoryServiceImpl implements PaymentHistoryService {
     private final JWTService jwtService;
 
     @Override
-    public List<PaymentHistoryDto> getUserPaymentHistory(String authHeader) {
+    public ApiResponse<List<PaymentHistoryDto>> getUserPaymentHistory(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Long userId = jwtService.extractUserId(authHeader.substring(7));
 
-        return paymentRepository.findAll().stream()
+        List<PaymentHistoryDto> history = paymentRepository.findAll().stream()
                 .filter(p -> p.getReservation().getUser().getId().equals(userId))
                 .map(PaymentHistoryDto::fromEntity)
                 .collect(Collectors.toList());
+
+        return new ApiResponse<>(true, "Fetched user payment history", history);
     }
 
     @Override
-    public List<PaymentHistoryDto> getAllPayments(String authHeader) {
+    public ApiResponse<List<PaymentHistoryDto>> getAllPayments(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
-        List<Payment> payments = paymentRepository.findAll();
-
-        return payments.stream()
+        List<PaymentHistoryDto> history = paymentRepository.findAll().stream()
                 .map(PaymentHistoryDto::fromEntity)
                 .collect(Collectors.toList());
+
+        return new ApiResponse<>(true, "Fetched all payments", history);
     }
 
     @Override
-    public BigDecimal getTotalSuccessfulPayments(String authHeader) {
+    public ApiResponse<BigDecimal> getTotalSuccessfulPayments(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         List<Payment> successfulPayments = paymentRepository.findAll().stream()
                 .filter(p -> p.getPaymentStatus() == PaymentStatus.SUCCESS)
                 .toList();
 
-        return successfulPayments.stream()
+        BigDecimal total = successfulPayments.stream()
                 .map(Payment::getPayhereAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new ApiResponse<>(true, "Total successful payments calculated", total);
     }
 }

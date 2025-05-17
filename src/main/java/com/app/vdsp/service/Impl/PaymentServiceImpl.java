@@ -36,7 +36,11 @@ public class PaymentServiceImpl implements PaymentService {
                               ReservationRepository reservationRepository,
                               PaymentApprovalRepository paymentApprovalRepository,
                               NotificationRepository notificationRepository,
-                              EventRepository eventRepository, EventStaffRepository eventStaffRepository, PdfGeneratorUtil pdfGeneratorUtil, EmailService emailService, ReservationDocumentRepository reservationDocumentRepository) {
+                              EventRepository eventRepository,
+                              EventStaffRepository eventStaffRepository,
+                              PdfGeneratorUtil pdfGeneratorUtil,
+                              EmailService emailService,
+                              ReservationDocumentRepository reservationDocumentRepository) {
         this.paymentRepository = paymentRepository;
         this.payHereService = payHereService;
         this.reservationRepository = reservationRepository;
@@ -50,10 +54,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String processPaymentNotification(Map<String, String> params) {
+    public ApiResponse<String> processPaymentNotification(Map<String, String> params) {
         try {
-            System.out.println(" PayHere Notification Received: " + params);
-
             String merchantId = params.get("merchant_id");
             String orderId = params.get("order_id");
             String paymentId = params.get("payment_id");
@@ -66,22 +68,17 @@ public class PaymentServiceImpl implements PaymentService {
             try {
                 statusCode = Integer.parseInt(statusCodeStr);
             } catch (NumberFormatException e) {
-                System.err.println("Invalid status_code format: " + statusCodeStr);
-                return "Invalid status_code format.";
+                return new ApiResponse<>(false, "Invalid status_code format", null);
             }
 
             boolean isValid = payHereService.verifyPaymentStatus(
-                    merchantId,
-                    orderId,
-                    Double.parseDouble(payHereAmount),
-                    payHereCurrency,
-                    statusCode,
-                    receivedMd5Sig
+                    merchantId, orderId,
+                    Double.parseDouble(payHereAmount), payHereCurrency,
+                    statusCode, receivedMd5Sig
             );
 
             if (!isValid) {
-                System.err.println("Signature verification failed.");
-                return "Invalid signature.";
+                return new ApiResponse<>(false, "Signature verification failed", null);
             }
 
             Reservation reservation = reservationRepository.findById(Long.parseLong(orderId))
@@ -105,7 +102,6 @@ public class PaymentServiceImpl implements PaymentService {
                     .build();
 
             paymentRepository.save(payment);
-            System.out.println("Payment saved for order ID: " + orderId);
 
             if (statusCode == 2) {
                 User user = reservation.getUser();
@@ -116,9 +112,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .status(true)
                         .approvedAt(null)
                         .build();
-
                 paymentApprovalRepository.save(approval);
-                System.out.println("PaymentApproval created for user ID: " + user.getId());
 
                 Notification notification = Notification.builder()
                         .userId(user.getId())
@@ -126,15 +120,13 @@ public class PaymentServiceImpl implements PaymentService {
                         .message("Your reservation has been approved after successful payment.")
                         .build();
                 notificationRepository.save(notification);
-                System.out.println("Notification created for user ID: " + user.getId());
 
                 Event event = Event.builder()
                         .reservation(reservation)
                         .eventDate(reservation.getEventDate())
-                        .albumStatus(AlbumStatus.IN_PROGRESS) 
+                        .albumStatus(AlbumStatus.IN_PROGRESS)
                         .build();
                 eventRepository.save(event);
-                System.out.println("Event created for reservation ID: " + reservation.getId());
 
                 EventStaff eventStaff = EventStaff.builder()
                         .event(event)
@@ -143,11 +135,9 @@ public class PaymentServiceImpl implements PaymentService {
                         .assignedAt(null)
                         .build();
                 eventStaffRepository.save(eventStaff);
-                System.out.println("EventStaff created for event ID: " + event.getId());
 
                 byte[] pdfBytes = pdfGeneratorUtil.generateReservationConfirmationPdf(reservation);
 
-                // Save to DB or filesystem (DB in this case)
                 ReservationDocument confirmationDoc = ReservationDocument.builder()
                         .reservation(reservation)
                         .name("Reservation Confirmation Letter")
@@ -157,7 +147,6 @@ public class PaymentServiceImpl implements PaymentService {
                         .build();
                 reservationDocumentRepository.save(confirmationDoc);
 
-                // Send email to user
                 emailService.sendEmailWithAttachment(
                         user.getEmail(),
                         "Reservation Confirmation",
@@ -167,24 +156,18 @@ public class PaymentServiceImpl implements PaymentService {
                 );
             }
 
-            return switch (statusCode) {
-                case 2 -> "Payment successful.";
-                case 0 -> "Payment pending.";
-                case -1 -> "Payment canceled.";
-                case -2 -> "Payment failed.";
-                case -3 -> "Payment chargedback.";
-                default -> "Unknown payment status.";
-            };
+            return new ApiResponse<>(true, "Payment processed: " + PaymentStatus.fromStatusCode(statusCode).name(), null);
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return "Error occurred while processing payment: " + ex.getMessage();
+            return new ApiResponse<>(false, "Error occurred: " + ex.getMessage(), null);
         }
     }
 
     @Override
-    public boolean isAlreadyPaid(Long reservationId, String authHeader) {
+    public ApiResponse<Boolean> isAlreadyPaid(Long reservationId, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        return paymentRepository.existsByReservationIdAndPaymentStatus(reservationId, PaymentStatus.SUCCESS);
+        boolean paid = paymentRepository.existsByReservationIdAndPaymentStatus(reservationId, PaymentStatus.SUCCESS);
+        return new ApiResponse<>(true, "Payment status checked", paid);
     }
 }

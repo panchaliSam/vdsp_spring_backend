@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.PackageDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.ReservationPackage;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.PackageRepository;
@@ -26,7 +27,7 @@ public class PackageServiceImpl implements PackageService {
     }
 
     @Override
-    public PackageDto createPackage(PackageDto packageDto, String authHeader) {
+    public ApiResponse<PackageDto> createPackage(PackageDto packageDto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         log.info("Creating package: {}", packageDto);
 
@@ -36,43 +37,48 @@ public class PackageServiceImpl implements PackageService {
         reservationPackage.setPrice(packageDto.getPrice());
 
         packageRepository.save(reservationPackage);
-        return packageDto;
+        return new ApiResponse<>(true, "Package created successfully", packageDto);
     }
 
     @Override
-    public List<PackageDto> getAllPackages(String authHeader) {
+    public ApiResponse<List<PackageDto>> getAllPackages(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         log.info("Fetching all packages");
 
-        return packageRepository.findAll().stream()
+        List<PackageDto> packages = packageRepository.findAll().stream()
                 .map(PackageDto::fromEntity)
                 .collect(Collectors.toList());
+
+        return new ApiResponse<>(true, "Fetched all packages", packages);
     }
 
     @Override
-    public Optional<PackageDto> getPackageById(Long id, String authHeader) {
+    public ApiResponse<PackageDto> getPackageById(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         log.info("Fetching package by id: {}", id);
 
-        return packageRepository.findById(id).map(PackageDto::fromEntity);
+        Optional<ReservationPackage> pkg = packageRepository.findById(id);
+        return pkg.map(reservationPackage -> new ApiResponse<>(true, "Package found", PackageDto.fromEntity(reservationPackage)))
+                .orElseGet(() -> new ApiResponse<>(false, "Package not found", null));
     }
 
     @Override
-    public void deletePackageById(Long id, String authHeader) {
+    public ApiResponse<String> deletePackageById(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         log.info("Deleting package with id: {}", id);
 
         if (packageRepository.existsById(id)) {
             packageRepository.deleteById(id);
+            return new ApiResponse<>(true, "Package deleted successfully", null);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
+            return new ApiResponse<>(false, "Package not found", null);
         }
     }
 
     @Override
-    public void updatePackageById(PackageDto packageDto, Long id, String authHeader) {
+    public ApiResponse<String> updatePackageById(PackageDto packageDto, Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        log.info("Patching package with id: {}", id);
+        log.info("Updating package with id: {}", id);
 
         ReservationPackage reservationPackage = packageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
@@ -88,6 +94,6 @@ public class PackageServiceImpl implements PackageService {
         }
 
         packageRepository.save(reservationPackage);
+        return new ApiResponse<>(true, "Package updated successfully", null);
     }
-
 }

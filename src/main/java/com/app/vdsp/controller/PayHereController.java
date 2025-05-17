@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.PaymentRequestDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.ReservationDocument;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.ReservationDocumentRepository;
@@ -29,32 +30,33 @@ public class PayHereController {
     private String externalBaseUrl;
 
     @Autowired
-    public PayHereController(PayHereService payHereService, PaymentService paymentService, ReservationDocumentRepository reservationDocumentRepository) {
+    public PayHereController(PayHereService payHereService,
+                             PaymentService paymentService,
+                             ReservationDocumentRepository reservationDocumentRepository) {
         this.payHereService = payHereService;
         this.paymentService = paymentService;
         this.reservationDocumentRepository = reservationDocumentRepository;
     }
 
     @PostMapping("/generate-hash")
-    public String generateHash(@RequestHeader("Authorization") String authHeader, @RequestBody PaymentRequestDto paymentRequest) {
+    public String generateHash(@RequestHeader("Authorization") String authHeader,
+                               @RequestBody PaymentRequestDto paymentRequest) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-
-        String orderId = paymentRequest.getOrderId();
-        double amount = paymentRequest.getAmount();
         String currency = "LKR";
-
-        return payHereService.generateHash(orderId, amount, currency);
+        return payHereService.generateHash(paymentRequest.getOrderId(), paymentRequest.getAmount(), currency);
     }
 
     @PostMapping("/notify")
-    public String notify(@RequestParam Map<String, String> params) {
+    public ResponseEntity<ApiResponse<String>> notify(@RequestParam Map<String, String> params) {
         System.out.println("Notify endpoint hit via: " + externalBaseUrl + "/api/payment/notify");
-        return paymentService.processPaymentNotification(params);
+        return ResponseEntity.ok(paymentService.processPaymentNotification(params));
     }
 
     @GetMapping("/already-paid/{reservationId}")
-    public boolean isAlreadyPaid(@PathVariable Long reservationId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        return paymentService.isAlreadyPaid(reservationId, authHeader);
+    public ResponseEntity<ApiResponse<Boolean>> isAlreadyPaid(
+            @PathVariable Long reservationId,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+        return ResponseEntity.ok(paymentService.isAlreadyPaid(reservationId, authHeader));
     }
 
     @GetMapping("/reservation/{id}/confirmation-letter")

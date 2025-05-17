@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.EventDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.EventService;
 import com.app.vdsp.type.AlbumStatus;
 import lombok.RequiredArgsConstructor;
@@ -20,29 +21,29 @@ public class EventController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @PatchMapping("/{id}/album-status")
-    public ResponseEntity<EventDto> updateAlbumStatus(
+    public ResponseEntity<ApiResponse<EventDto>> updateAlbumStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
             @RequestHeader("Authorization") String authHeader) {
 
         String statusStr = body.get("albumStatus");
         if (statusStr == null || statusStr.isBlank()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "AlbumStatus is required", null));
         }
 
         AlbumStatus status;
         try {
             status = AlbumStatus.valueOf(statusStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Invalid AlbumStatus", null));
         }
 
-        EventDto updated = eventService.updateAlbumStatus(id, status, authHeader);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(eventService.updateAlbumStatus(id, status, authHeader));
     }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/getAll")
-    public ResponseEntity<List<EventDto>> getAllEvents(
+    public ResponseEntity<ApiResponse<List<EventDto>>> getAllEvents(
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(eventService.getAllEvents(authHeader));
     }

@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.PaymentHistoryDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.PaymentHistoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,21 +25,21 @@ public class PaymentHistoryController {
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("/history")
-    public ResponseEntity<List<PaymentHistoryDto>> getUserPaymentHistory(
+    public ResponseEntity<ApiResponse<List<PaymentHistoryDto>>> getUserPaymentHistory(
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(paymentHistoryService.getUserPaymentHistory(authHeader));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/getAll")
-    public ResponseEntity<List<PaymentHistoryDto>> getAllPayments(
+    public ResponseEntity<ApiResponse<List<PaymentHistoryDto>>> getAllPayments(
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(paymentHistoryService.getAllPayments(authHeader));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/total-success")
-    public ResponseEntity<BigDecimal> getTotalSuccessfulPayments(
+    public ResponseEntity<ApiResponse<BigDecimal>> getTotalSuccessfulPayments(
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(paymentHistoryService.getTotalSuccessfulPayments(authHeader));
     }
