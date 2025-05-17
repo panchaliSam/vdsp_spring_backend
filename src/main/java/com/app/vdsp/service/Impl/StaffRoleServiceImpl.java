@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.StaffRoleDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Role;
 import com.app.vdsp.entity.StaffRole;
 import com.app.vdsp.helpers.AuthorizationHelper;
@@ -24,38 +25,36 @@ public class StaffRoleServiceImpl implements StaffRoleService {
     private final RoleRepository roleRepository;
 
     @Override
-    public List<StaffRoleDto> getAllStaffRoles(String authHeader) {
+    public ApiResponse<List<StaffRoleDto>> getAllStaffRoles(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        return staffRoleRepository.findAll()
+        List<StaffRoleDto> data = staffRoleRepository.findAll()
                 .stream()
                 .map(StaffRoleDto::fromEntity)
                 .collect(Collectors.toList());
+        return new ApiResponse<>(true, "Fetched all staff roles", data);
     }
 
     @Override
-    public StaffRoleDto getStaffRoleById(Long id, String authHeader) {
+    public ApiResponse<StaffRoleDto> getStaffRoleById(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         StaffRole staffRole = staffRoleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StaffRole not found"));
-        return StaffRoleDto.fromEntity(staffRole);
+        return new ApiResponse<>(true, "StaffRole fetched successfully", StaffRoleDto.fromEntity(staffRole));
     }
 
     @Override
-    public StaffRoleDto updateStaffRole(Long id, StaffAssignStatus assignStatus, String roleName, String authHeader) {
+    public ApiResponse<StaffRoleDto> updateStaffRole(Long id, StaffAssignStatus assignStatus, String roleName, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
         StaffRole staffRole = staffRoleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StaffRole not found"));
 
-        // Update assign status
         staffRole.setAssignStatus(assignStatus);
 
-        // Explicitly handle assignedAt
         if (assignStatus == StaffAssignStatus.ASSIGNED && staffRole.getAssignedAt() == null) {
             staffRole.setAssignedAt(java.time.LocalDateTime.now());
         }
 
-        // Update role if provided
         if (roleName != null && !roleName.isBlank()) {
             Role role = roleRepository.findByRoleName(roleName.toUpperCase())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
@@ -63,23 +62,24 @@ public class StaffRoleServiceImpl implements StaffRoleService {
         }
 
         staffRoleRepository.save(staffRole);
-        return StaffRoleDto.fromEntity(staffRole);
+        return new ApiResponse<>(true, "StaffRole updated successfully", StaffRoleDto.fromEntity(staffRole));
     }
 
     @Override
-    public void deleteStaffRole(Long id, String authHeader) {
+    public ApiResponse<String> deleteStaffRole(Long id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         staffRoleRepository.deleteById(id);
+        return new ApiResponse<>(true, "StaffRole deleted successfully", null);
     }
 
     @Override
-    public List<StaffRole> getRolesByStaffId(Long staffId, String authHeader) {
+    public ApiResponse<List<StaffRole>> getRolesByStaffId(Long staffId, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-
-        return staffRoleRepository.findAll()
+        List<StaffRole> roles = staffRoleRepository.findAll()
                 .stream()
                 .filter(role -> role.getStaff().getId().equals(staffId))
                 .toList();
+        return new ApiResponse<>(true, "Roles for staff ID " + staffId + " fetched", roles);
     }
 
 

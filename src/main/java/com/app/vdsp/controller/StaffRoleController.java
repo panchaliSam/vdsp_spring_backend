@@ -1,11 +1,11 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.StaffRoleDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.StaffRole;
 import com.app.vdsp.service.StaffRoleService;
 import com.app.vdsp.type.StaffAssignStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,24 +18,23 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StaffRoleController {
 
-    @Autowired
     private final StaffRoleService staffRoleService;
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/getAll")
-    public ResponseEntity<List<StaffRoleDto>> getAll(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse<List<StaffRoleDto>>> getAll(@RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(staffRoleService.getAllStaffRoles(authHeader));
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/{id}")
-    public ResponseEntity<StaffRoleDto> getById(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse<StaffRoleDto>> getById(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(staffRoleService.getStaffRoleById(id, authHeader));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}")
-    public ResponseEntity<StaffRoleDto> update(
+    public ResponseEntity<ApiResponse<StaffRoleDto>> update(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
             @RequestHeader("Authorization") String authHeader) {
@@ -48,24 +47,22 @@ public class StaffRoleController {
             assignStatus = StaffAssignStatus.valueOf(statusStr.toUpperCase());
         }
 
-        StaffRoleDto updated = staffRoleService.updateStaffRole(id, assignStatus, roleName, authHeader);
+        ApiResponse<StaffRoleDto> updated = staffRoleService.updateStaffRole(id, assignStatus, roleName, authHeader);
         return ResponseEntity.ok(updated);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
-        staffRoleService.deleteStaffRole(id, authHeader);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(staffRoleService.deleteStaffRole(id, authHeader));
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/staff/{staffId}")
-    public ResponseEntity<List<StaffRole>> getRolesByStaffId(
+    public ResponseEntity<ApiResponse<List<StaffRole>>> getRolesByStaffId(
             @PathVariable Long staffId,
             @RequestHeader("Authorization") String authHeader) {
 
-        List<StaffRole> roles = staffRoleService.getRolesByStaffId(staffId, authHeader);
-        return ResponseEntity.ok(roles);
+        return ResponseEntity.ok(staffRoleService.getRolesByStaffId(staffId, authHeader));
     }
 }
