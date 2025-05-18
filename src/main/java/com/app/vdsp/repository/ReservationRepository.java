@@ -18,4 +18,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findConflictingReservationsWithLock(
             @Param("eventDate") LocalDate eventDate,
             @Param("sessionTypes") List<SessionType> sessionTypes);
+    @Query("SELECT r FROM Reservation r WHERE r.id NOT IN (SELECT e.reservation.id FROM Event e)")
+    List<Reservation> findPendingReservations();
 }
