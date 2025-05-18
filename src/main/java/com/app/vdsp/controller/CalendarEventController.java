@@ -15,7 +15,7 @@ public class CalendarEventController {
 
     private final CalendarEventService calendarEventService;
 
-    @GetMapping("/events")
+    @GetMapping("/dates")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCalendarEvents(
             @RequestHeader("Authorization") String authHeader
     ) {

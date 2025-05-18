@@ -5,6 +5,7 @@ import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.HolidayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,7 @@ public class HolidayController {
 
     private final HolidayService holidayService;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<HolidayDto>> addHoliday(
             @RequestBody HolidayDto dto,
