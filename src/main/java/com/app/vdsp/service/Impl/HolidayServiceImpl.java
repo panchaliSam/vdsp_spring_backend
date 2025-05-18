@@ -1,4 +1,4 @@
-package com.app.vdsp.service.impl;
+package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.HolidayDto;
 import com.app.vdsp.entity.Holiday;
