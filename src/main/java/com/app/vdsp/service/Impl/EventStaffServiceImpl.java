@@ -1,11 +1,11 @@
 package com.app.vdsp.service.Impl;
 
+import com.app.vdsp.dto.AssignMultipleStaffDto;
 import com.app.vdsp.dto.EventStaffDto;
-import com.app.vdsp.entity.ApiResponse;
-import com.app.vdsp.entity.EventStaff;
-import com.app.vdsp.entity.Staff;
+import com.app.vdsp.entity.*;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.EventStaffRepository;
+import com.app.vdsp.repository.NotificationRepository;
 import com.app.vdsp.repository.StaffRepository;
 import com.app.vdsp.service.EventStaffService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ public class EventStaffServiceImpl implements EventStaffService {
     private final EventStaffRepository eventStaffRepository;
     private final StaffRepository staffRepository;
     private final AuthorizationHelper authorizationHelper;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public ApiResponse<List<EventStaffDto>> getAllEventStaff(String authHeader) {
@@ -44,33 +46,51 @@ public class EventStaffServiceImpl implements EventStaffService {
     }
 
     @Override
-    public ApiResponse<EventStaffDto> assignStaffByName(Long eventStaffId, String staffFullName, String authHeader) {
+    public ApiResponse<String> assignMultipleStaffByNames(Long eventStaffId, AssignMultipleStaffDto request, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
 
-        String[] parts = staffFullName.trim().split(" ");
-        if (parts.length < 2) {
-            return new ApiResponse<>(false, "Full name must include first and last name", null);
-        }
-
-        String firstName = parts[0];
-        String lastName = parts[1];
-
-        Staff staff = staffRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(firstName, lastName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found by name"));
-
-        EventStaff eventStaff = eventStaffRepository.findById(eventStaffId)
+        EventStaff baseEventStaff = eventStaffRepository.findById(eventStaffId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "EventStaff record not found"));
 
-        boolean alreadyAssigned = eventStaffRepository.existsByStaffIdAndEventDate(staff.getId(), eventStaff.getEventDate());
-        if (alreadyAssigned) {
-            return new ApiResponse<>(false, "Staff already assigned for this date", null);
+        Long eventId = baseEventStaff.getEvent().getId();
+        LocalDate eventDate = baseEventStaff.getEventDate();
+        int assignedCount = 0;
+
+        for (String fullName : request.getStaffNames()) {
+            String[] parts = fullName.trim().split(" ");
+            if (parts.length < 2) continue;
+
+            String firstName = parts[0];
+            String lastName = parts[1];
+
+            Staff staff = staffRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(firstName, lastName)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found: " + fullName));
+
+            boolean alreadyAssigned = eventStaffRepository.existsByStaffIdAndEventDate(staff.getId(), eventDate);
+            if (alreadyAssigned) continue;
+
+            EventStaff newAssignment = EventStaff.builder()
+                    .event(baseEventStaff.getEvent())
+                    .eventDate(eventDate)
+                    .staff(staff)
+                    .assignedAt(LocalDateTime.now())
+                    .build();
+
+            eventStaffRepository.save(newAssignment);
+
+            Notification notification = Notification.builder()
+                    .userId(staff.getUserId())
+                    .title("New Event Assignment")
+                    .message("You have been assigned to an event on " + eventDate)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            notificationRepository.save(notification);
+
+            assignedCount++;
         }
 
-        eventStaff.setStaff(staff);
-        eventStaff.setAssignedAt(LocalDateTime.now());
-        eventStaffRepository.save(eventStaff);
-
-        return new ApiResponse<>(true, "Staff assigned successfully", EventStaffDto.fromEntity(eventStaff));
+        return new ApiResponse<>(true, assignedCount + " staff assigned successfully", null);
     }
 
     @Override

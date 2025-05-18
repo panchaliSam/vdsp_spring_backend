@@ -1,5 +1,6 @@
 package com.app.vdsp.controller;
 
+import com.app.vdsp.dto.AssignMultipleStaffDto;
 import com.app.vdsp.dto.EventStaffDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.EventStaffService;
@@ -32,12 +33,13 @@ public class EventStaffController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PatchMapping("/{id}/assignByName")
-    public ResponseEntity<ApiResponse<EventStaffDto>> assignStaffByName(@PathVariable Long id,
-                                                                        @RequestBody Map<String, String> body,
-                                                                        @RequestHeader("Authorization") String authHeader) {
-        String staffName = body.get("staffName");
-        return ResponseEntity.ok(eventStaffService.assignStaffByName(id, staffName, authHeader));
+    @PatchMapping("/{eventStaffId}/assignByName")
+    public ResponseEntity<ApiResponse<String>> assignMultipleStaff(
+            @PathVariable Long eventStaffId,
+            @RequestBody AssignMultipleStaffDto request,
+            @RequestHeader("Authorization") String authHeader) {
+        ApiResponse<String> response = eventStaffService.assignMultipleStaffByNames(eventStaffId, request, authHeader);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('ROLE_STAFF')")
