@@ -39,8 +39,8 @@ public class PayHereController {
     }
 
     @PostMapping("/generate-hash")
-    public String generateHash(@RequestHeader("Authorization") String authHeader,
-                               @RequestBody PaymentRequestDto paymentRequest) {
+    public ApiResponse<String> generateHash(@RequestHeader("Authorization") String authHeader,
+                                            @RequestBody PaymentRequestDto paymentRequest) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         String currency = "LKR";
         return payHereService.generateHash(paymentRequest.getOrderId(), paymentRequest.getAmount(), currency);

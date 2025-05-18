@@ -1,5 +1,6 @@
 package com.app.vdsp.utils;
 
+import com.app.vdsp.entity.ApiResponse;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,7 @@ public class PayHereService {
         return dotenv.get("PAYHERE.NOTIFY_URL");
     }
 
-    public String generateHash(String orderId, double amount, String currency) {
+    public ApiResponse<String> generateHash(String orderId, double amount, String currency) {
         String merchantId = dotenv.get("PAYHERE.MERCHANT_ID");
         String merchantSecret = dotenv.get("PAYHERE.SECRET_KEY");
 
@@ -42,7 +43,9 @@ public class PayHereService {
 
         String amountFormatted = String.format("%.2f", amount);
 
-        return getMd5(merchantId + orderId + amountFormatted + currency + getMd5(merchantSecret));
+        String hash = getMd5(merchantId + orderId + amountFormatted + currency + getMd5(merchantSecret));
+
+        return new ApiResponse<String>(true,"Hash Computed Successfully!",hash);
     }
 
     private String getMd5(String input) {
