@@ -1,6 +1,8 @@
+// StaffController.java
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.StaffDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.service.StaffService;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +24,11 @@ public class StaffController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/getAll")
-    public ResponseEntity<List<StaffDto>> getAllStaff(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse<List<StaffDto>>> getAllStaff(
+            @RequestHeader("Authorization") String authHeader
+    ) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        return ResponseEntity.ok(staffService.getAllStaff());
+        ApiResponse<List<StaffDto>> response = staffService.getAllStaff();
+        return ResponseEntity.ok(response);
     }
 }
