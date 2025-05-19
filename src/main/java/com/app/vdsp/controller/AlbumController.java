@@ -1,6 +1,6 @@
 package com.app.vdsp.controller;
 
-import com.app.vdsp.entity.Album;
+import com.app.vdsp.dto.AlbumDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.AlbumService;
 import lombok.RequiredArgsConstructor;
@@ -18,26 +18,26 @@ public class AlbumController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @PostMapping
-    public ApiResponse<Album> create(@RequestBody Album album, @RequestHeader("Authorization") String authHeader) {
-        return albumService.createAlbum(album, authHeader);
+    public ApiResponse<AlbumDto> create(@RequestBody AlbumDto dto, @RequestHeader("Authorization") String authHeader) {
+        return albumService.createAlbum(dto, authHeader);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping("/{id}")
-    public ApiResponse<Album> getById(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+    public ApiResponse<AlbumDto> getById(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
         return albumService.getAlbumById(id, authHeader);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping
-    public ApiResponse<List<Album>> getAll(@RequestHeader("Authorization") String authHeader) {
+    public ApiResponse<List<AlbumDto>> getAll(@RequestHeader("Authorization") String authHeader) {
         return albumService.getAllAlbums(authHeader);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @PutMapping("/{id}")
-    public ApiResponse<Album> update(@PathVariable Long id, @RequestBody Album album, @RequestHeader("Authorization") String authHeader) {
-        return albumService.updateAlbum(id, album, authHeader);
+    public ApiResponse<AlbumDto> update(@PathVariable Long id, @RequestBody AlbumDto dto, @RequestHeader("Authorization") String authHeader) {
+        return albumService.updateAlbum(id, dto, authHeader);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")

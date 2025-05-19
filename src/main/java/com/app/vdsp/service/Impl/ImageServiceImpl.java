@@ -1,5 +1,6 @@
 package com.app.vdsp.service.Impl;
 
+import com.app.vdsp.dto.ImageDto;
 import com.app.vdsp.entity.Album;
 import com.app.vdsp.entity.Image;
 import com.app.vdsp.entity.ApiResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,39 +26,40 @@ public class ImageServiceImpl implements ImageService {
     private final AuthorizationHelper authorizationHelper;
 
     @Override
-    public ApiResponse<Image> createImage(Image image, String authHeader) {
+    public ApiResponse<ImageDto> createImage(ImageDto dto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        if (image.getAlbum() != null && image.getAlbum().getId() != null) {
-            Album album = albumRepository.findById(image.getAlbum().getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found"));
-            image.setAlbum(album);
-        }
-        return new ApiResponse<>(true, "Image created", imageRepository.save(image));
+        Album album = albumRepository.findById(dto.getAlbumId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found"));
+        Image saved = imageRepository.save(ImageDto.toEntity(dto, album));
+        return new ApiResponse<>(true, "Image created", ImageDto.fromEntity(saved));
     }
 
     @Override
-    public ApiResponse<Image> getImageById(UUID id, String authHeader) {
+    public ApiResponse<ImageDto> getImageById(UUID id, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
-        return new ApiResponse<>(true, "Image fetched", image);
+        return new ApiResponse<>(true, "Image fetched", ImageDto.fromEntity(image));
     }
 
     @Override
-    public ApiResponse<List<Image>> getImagesByAlbum(Long albumId, String authHeader) {
+    public ApiResponse<List<ImageDto>> getImagesByAlbum(Long albumId, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found"));
-        return new ApiResponse<>(true, "Images for album", album.getImages());
+        List<ImageDto> result = album.getImages().stream()
+                .map(ImageDto::fromEntity)
+                .collect(Collectors.toList());
+        return new ApiResponse<>(true, "Images for album", result);
     }
 
     @Override
-    public ApiResponse<Image> updateImage(UUID id, Image updatedImage, String authHeader) {
+    public ApiResponse<ImageDto> updateImage(UUID id, ImageDto dto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
-        image.setPath(updatedImage.getPath());
-        return new ApiResponse<>(true, "Image updated", imageRepository.save(image));
+        image.setPath(dto.getPath());
+        return new ApiResponse<>(true, "Image updated", ImageDto.fromEntity(imageRepository.save(image)));
     }
 
     @Override
