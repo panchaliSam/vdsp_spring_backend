@@ -4,6 +4,7 @@ import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
 import com.app.vdsp.dto.UserUpdateDto;
 import com.app.vdsp.entity.*;
+import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.*;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.RoleType;
@@ -37,8 +38,9 @@ public class UserServiceImpl implements UserService {
     private final StaffRepository staffRepository;
     private final StaffRoleRepository staffRoleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthorizationHelper authorizationHelper;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, StaffRoleRepository staffRoleRepository, RefreshTokenRepository refreshTokenRepository) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, StaffRoleRepository staffRoleRepository, RefreshTokenRepository refreshTokenRepository, AuthorizationHelper authorizationHelper) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
@@ -46,6 +48,7 @@ public class UserServiceImpl implements UserService {
         this.staffRepository = staffRepository;
         this.staffRoleRepository = staffRoleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.authorizationHelper = authorizationHelper;
     }
 
     @Override
@@ -242,23 +245,27 @@ public class UserServiceImpl implements UserService {
         return new ApiResponse<>(true, "Token refreshed", accessToken);
     }
 
-
     @Override
-    public ApiResponse<String> patchUser(Long id, @Valid UserUpdateDto u) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-                );
+    public ApiResponse<Long> patchOwnProfile(String authHeader,
+                                             @Valid UserUpdateDto updates) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        Long userId = authorizationHelper.extractUserId(authHeader);
 
-        user.setFirstName(u.getFirstName());
-        user.setLastName(u.getLastName());
-        user.setPhoneNumber(u.getPhoneNumber());
-        if (u.getPassword() != null && !u.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(u.getPassword()));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setFirstName(updates.getFirstName());
+        user.setLastName(updates.getLastName());
+        user.setPhoneNumber(updates.getPhoneNumber());
+        if (updates.getPassword() != null && !updates.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(updates.getPassword()));
         }
 
         userRepository.save(user);
-        log.info("Patched user {}: firstName, lastName, phoneNumber, password", id);
-        return new ApiResponse<>(true, "User updated successfully", null);
+        log.info("User {} updated their profile", userId);
+
+        // return the userId in the data field
+        return new ApiResponse<>(true, "Profile updated successfully", userId);
     }
 }

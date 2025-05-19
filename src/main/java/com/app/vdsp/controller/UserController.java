@@ -8,6 +8,7 @@ import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.RoleType;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -85,21 +86,12 @@ public class UserController {
         return ResponseEntity.ok(userService.refreshAccessToken(refreshToken));
     }
 
-    @PatchMapping("/update-profile/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER','STAFF')")
-    public ResponseEntity<ApiResponse<String>> patchUser(
-            @PathVariable Long id,
-            @RequestBody @Validated UserUpdateDto updates,
-            @AuthenticationPrincipal User currentUser
-    ) {
-        boolean isAdmin = currentUser.getRole() == RoleType.ROLE_ADMIN;
-        boolean isOwner = currentUser.getId().equals(id);
-        if (!isAdmin && !isOwner) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse<>(false, "Not authorized", null));
-        }
-        ApiResponse<String> resp = userService.patchUser(id, updates);
+    @PatchMapping("/update-profile")
+    public ResponseEntity<ApiResponse<Long>> patchMyProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody @Valid UserUpdateDto updates) {
+
+        ApiResponse<Long> resp = userService.patchOwnProfile(authHeader, updates);
         return ResponseEntity.ok(resp);
     }
 
