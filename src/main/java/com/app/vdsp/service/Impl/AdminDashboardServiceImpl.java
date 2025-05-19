@@ -1,11 +1,16 @@
 package com.app.vdsp.service.Impl;
 
+import com.app.vdsp.dto.DashboardStatsDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Payment;
 import com.app.vdsp.helpers.AuthorizationHelper;
+import com.app.vdsp.repository.EventRepository;
 import com.app.vdsp.repository.PaymentRepository;
+import com.app.vdsp.repository.StaffRepository;
+import com.app.vdsp.repository.UserRepository;
 import com.app.vdsp.service.AdminDashboardService;
 import com.app.vdsp.type.PaymentStatus;
+import com.app.vdsp.type.RoleType;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,9 +20,15 @@ import java.util.List;
 public class AdminDashboardServiceImpl implements AdminDashboardService {
 
     private final PaymentRepository paymentRepository;
+    private final EventRepository eventRepository;
+    private final StaffRepository staffRepository;
+    private final UserRepository userRepository;
 
-    public AdminDashboardServiceImpl(PaymentRepository paymentRepository) {
+    public AdminDashboardServiceImpl(PaymentRepository paymentRepository, EventRepository eventRepository, StaffRepository staffRepository, UserRepository userRepository) {
         this.paymentRepository = paymentRepository;
+        this.eventRepository = eventRepository;
+        this.staffRepository = staffRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -33,5 +44,76 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new ApiResponse<>(true, "Total successful payments calculated", total);
+    }
+
+    @Override
+    public ApiResponse<Long> getTotalEvents(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        long count = eventRepository.count();
+        return new ApiResponse<>(true, "Total events count retrieved", count);
+    }
+
+    @Override
+    public ApiResponse<Long> getTotalEventsByYear(int year, String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        long count = eventRepository.findAll().stream()
+                .filter(e -> e.getEventDate().getYear() == year)
+                .count();
+        return new ApiResponse<>(true, "Yearly event count retrieved", count);
+    }
+
+    @Override
+    public ApiResponse<Long> getTotalEventsByMonth(int year, int month, String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        long count = eventRepository.findAll().stream()
+                .filter(e -> e.getEventDate().getYear() == year && e.getEventDate().getMonthValue() == month)
+                .count();
+        return new ApiResponse<>(true, "Monthly event count retrieved", count);
+    }
+
+    @Override
+    public ApiResponse<Long> getTotalStaff(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        long count = staffRepository.count();
+        return new ApiResponse<>(true, "Total staff count retrieved", count);
+    }
+
+    @Override
+    public ApiResponse<Long> getTotalCustomers(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        long count = userRepository.countByRole(RoleType.ROLE_CUSTOMER);
+        return new ApiResponse<>(true, "Total customers count retrieved", count);
+    }
+
+    public ApiResponse<DashboardStatsDto> getDashboardStats(String authHeader, int year, int month) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+
+        BigDecimal totalPayments = paymentRepository.findAll().stream()
+                .filter(p -> p.getPaymentStatus() == PaymentStatus.SUCCESS)
+                .map(Payment::getPayhereAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long totalEvents = eventRepository.count();
+        long totalStaff = staffRepository.count();
+        long totalCustomers = userRepository.countByRole(RoleType.ROLE_CUSTOMER);
+
+        long yearlyCount = eventRepository.findAll().stream()
+                .filter(e -> e.getEventDate().getYear() == year)
+                .count();
+
+        long monthlyCount = eventRepository.findAll().stream()
+                .filter(e -> e.getEventDate().getYear() == year && e.getEventDate().getMonthValue() == month)
+                .count();
+
+        DashboardStatsDto stats = DashboardStatsDto.builder()
+                .totalSuccessfulPayments(totalPayments)
+                .totalEvents(totalEvents)
+                .totalStaff(totalStaff)
+                .totalCustomers(totalCustomers)
+                .yearlyEventCount(yearlyCount)
+                .monthlyEventCount(monthlyCount)
+                .build();
+
+        return new ApiResponse<>(true, "Dashboard statistics retrieved successfully", stats);
     }
 }
