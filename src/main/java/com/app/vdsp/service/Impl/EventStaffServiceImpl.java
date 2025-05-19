@@ -45,52 +45,92 @@ public class EventStaffServiceImpl implements EventStaffService {
         return new ApiResponse<>(true, "EventStaff fetched successfully", EventStaffDto.fromEntity(eventStaff));
     }
 
+
     @Override
-    public ApiResponse<String> assignMultipleStaffByNames(Long eventStaffId, AssignMultipleStaffDto request, String authHeader) {
-        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+    public ApiResponse<String> assignMultipleStaffByNames(
+            Long  eventStaffSlotId,
+            AssignMultipleStaffDto request,
+            String authHeader
+    ) {
+        authorizationHelper.ensureAuthorizationHeader(authHeader);
 
-        EventStaff baseEventStaff = eventStaffRepository.findById(eventStaffId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "EventStaff record not found"));
+        // look up the “base slot” just to get event & date
+        EventStaff baseSlot = eventStaffRepository.findById(eventStaffSlotId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "EventStaff slot not found"));
 
-        Long eventId = baseEventStaff.getEvent().getId();
-        LocalDate eventDate = baseEventStaff.getEventDate();
+        Event event       = baseSlot.getEvent();
+        LocalDate date    = baseSlot.getEventDate();
         int assignedCount = 0;
 
+        // grab any truly empty slots
+        List<EventStaff> emptySlots =
+                eventStaffRepository.findByEventIdAndEventDateAndStaffIsNull(
+                        event.getId(), date);
+
+        int slotIndex = 0;
+
         for (String fullName : request.getStaffNames()) {
-            String[] parts = fullName.trim().split(" ");
+            // parse “First Last”
+            String[] parts = fullName.trim().split("\\s+");
             if (parts.length < 2) continue;
 
-            String firstName = parts[0];
-            String lastName = parts[1];
+            String first = parts[0], last = parts[1];
 
-            Staff staff = staffRepository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(firstName, lastName)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found: " + fullName));
+            // find the staff entity
+            Staff staff = staffRepository
+                    .findByFirstNameIgnoreCaseAndLastNameIgnoreCase(first, last)
+                    .orElse(null);
+            if (staff == null) continue;
 
-            boolean alreadyAssigned = eventStaffRepository.existsByStaffIdAndEventDate(staff.getId(), eventDate);
-            if (alreadyAssigned) continue;
+            // skip if already on that date
+            if (eventStaffRepository.existsByStaffIdAndEventDate(
+                    staff.getId(), date)) {
+                continue;
+            }
 
-            EventStaff newAssignment = EventStaff.builder()
-                    .event(baseEventStaff.getEvent())
-                    .eventDate(eventDate)
-                    .staff(staff)
-                    .assignedAt(LocalDateTime.now())
-                    .build();
+            EventStaff slot;
+            if (slotIndex < emptySlots.size()) {
+                // fill an existing empty one
+                slot = emptySlots.get(slotIndex);
+            } else {
+                // **no empty slots left** — create a brand-new row
+                slot = new EventStaff();
+                slot.setEvent(event);
+                slot.setEventDate(date);
+            }
 
-            eventStaffRepository.save(newAssignment);
-
-            Notification notification = Notification.builder()
-                    .userId(staff.getUserId())
-                    .title("New Event Assignment")
-                    .message("You have been assigned to an event on " + eventDate)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-
-            notificationRepository.save(notification);
+            slot.setStaff(staff);
+            slot.setAssignedAt(LocalDateTime.now());
+            eventStaffRepository.save(slot);
 
             assignedCount++;
+            slotIndex++;
         }
 
-        return new ApiResponse<>(true, assignedCount + " staff assigned successfully", null);
+        return new ApiResponse<>(true,
+                assignedCount + " staff assigned successfully",
+                null);
+    }
+
+    @Override
+    public ApiResponse<String> unassignStaff(Long slotId, String authHeader) {
+        authorizationHelper.ensureAuthorizationHeader(authHeader);
+
+        EventStaff slot = eventStaffRepository.findById(slotId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "Assignment slot not found"));
+
+        // simply clear it
+        slot.setStaff(null);
+        slot.setAssignedAt(null);
+        eventStaffRepository.save(slot);
+
+        return new ApiResponse<>(true,
+                "Staff unassigned successfully",
+                null);
     }
 
     @Override

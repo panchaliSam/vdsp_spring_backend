@@ -12,4 +12,5 @@ public interface EventStaffService {
     ApiResponse<List<EventStaffDto>> getEventsForLoggedInStaff(String authHeader);
     ApiResponse<String> assignMultipleStaffByNames(Long eventStaffId, AssignMultipleStaffDto request, String authHeader);
     ApiResponse<String> delete(Long id, String authHeader);
+    ApiResponse<String> unassignStaff(Long slotId, String authHeader);
 }

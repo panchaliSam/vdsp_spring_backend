@@ -10,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/eventStaff")
@@ -54,5 +53,16 @@ public class EventStaffController {
     public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id,
                                                       @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(eventStaffService.delete(id, authHeader));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PatchMapping("/{slotId}/unassign")
+    public ResponseEntity<ApiResponse<String>> unassign(
+            @PathVariable Long slotId,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        return ResponseEntity.ok(
+                eventStaffService.unassignStaff(slotId, authHeader)
+        );
     }
 }
