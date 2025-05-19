@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -35,12 +34,5 @@ public class PaymentHistoryController {
     public ResponseEntity<ApiResponse<List<PaymentHistoryDto>>> getAllPayments(
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(paymentHistoryService.getAllPayments(authHeader));
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/total-success")
-    public ResponseEntity<ApiResponse<BigDecimal>> getTotalSuccessfulPayments(
-            @RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(paymentHistoryService.getTotalSuccessfulPayments(authHeader));
     }
 }

@@ -9,5 +9,4 @@ import java.util.List;
 public interface PaymentHistoryService {
     ApiResponse<List<PaymentHistoryDto>> getUserPaymentHistory(String authHeader);
     ApiResponse<List<PaymentHistoryDto>> getAllPayments(String authHeader);
-    ApiResponse<BigDecimal> getTotalSuccessfulPayments(String authHeader);
 }
