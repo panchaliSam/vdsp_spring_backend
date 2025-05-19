@@ -2,12 +2,14 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.dto.UserUpdateDto;
 import com.app.vdsp.entity.*;
 import com.app.vdsp.repository.*;
 import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.RoleType;
 import com.app.vdsp.type.StaffAssignStatus;
 import com.app.vdsp.utils.JWTService;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -238,5 +240,25 @@ public class UserServiceImpl implements UserService {
 
         String accessToken = jwtService.generateToken(user);
         return new ApiResponse<>(true, "Token refreshed", accessToken);
+    }
+
+
+    @Override
+    public ApiResponse<String> patchUser(Long id, @Valid UserUpdateDto u) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+                );
+
+        user.setFirstName(u.getFirstName());
+        user.setLastName(u.getLastName());
+        user.setPhoneNumber(u.getPhoneNumber());
+        if (u.getPassword() != null && !u.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(u.getPassword()));
+        }
+
+        userRepository.save(user);
+        log.info("Patched user {}: firstName, lastName, phoneNumber, password", id);
+        return new ApiResponse<>(true, "User updated successfully", null);
     }
 }

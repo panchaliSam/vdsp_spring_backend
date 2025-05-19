@@ -2,6 +2,7 @@ package com.app.vdsp.service;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.dto.UserUpdateDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,4 +21,5 @@ public interface UserService {
     ApiResponse<String> deleteUser(Long id);
     ApiResponse<String> logoutUser(String refreshToken);
     ApiResponse<String> refreshAccessToken(String refreshToken);
+    ApiResponse<String> patchUser(Long id, UserUpdateDto updates);
 }

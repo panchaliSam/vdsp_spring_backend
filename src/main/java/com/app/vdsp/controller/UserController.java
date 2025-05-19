@@ -2,6 +2,7 @@ package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.TokenResponseDto;
 import com.app.vdsp.dto.UserDto;
+import com.app.vdsp.dto.UserUpdateDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.User;
 import com.app.vdsp.service.UserService;
@@ -82,6 +83,24 @@ public class UserController {
     public ResponseEntity<ApiResponse<String>> refreshToken(@RequestBody JsonNode request) {
         String refreshToken = request.get("refresh_token").asText();
         return ResponseEntity.ok(userService.refreshAccessToken(refreshToken));
+    }
+
+    @PatchMapping("/update-profile/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER','STAFF')")
+    public ResponseEntity<ApiResponse<String>> patchUser(
+            @PathVariable Long id,
+            @RequestBody @Validated UserUpdateDto updates,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        boolean isAdmin = currentUser.getRole() == RoleType.ROLE_ADMIN;
+        boolean isOwner = currentUser.getId().equals(id);
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>(false, "Not authorized", null));
+        }
+        ApiResponse<String> resp = userService.patchUser(id, updates);
+        return ResponseEntity.ok(resp);
     }
 
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
