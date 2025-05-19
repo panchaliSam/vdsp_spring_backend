@@ -48,70 +48,70 @@ public class EventStaffServiceImpl implements EventStaffService {
 
     @Override
     public ApiResponse<String> assignMultipleStaffByNames(
-            Long  eventStaffSlotId,
+            Long eventStaffSlotId,
             AssignMultipleStaffDto request,
             String authHeader
     ) {
         authorizationHelper.ensureAuthorizationHeader(authHeader);
 
-        // look up the “base slot” just to get event & date
         EventStaff baseSlot = eventStaffRepository.findById(eventStaffSlotId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "EventStaff slot not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "EventStaff slot not found"
+                ));
 
-        Event event       = baseSlot.getEvent();
-        LocalDate date    = baseSlot.getEventDate();
-        int assignedCount = 0;
+        Event    event        = baseSlot.getEvent();
+        LocalDate date        = baseSlot.getEventDate();
+        int       assignedCount = 0;
 
-        // grab any truly empty slots
-        List<EventStaff> emptySlots =
-                eventStaffRepository.findByEventIdAndEventDateAndStaffIsNull(
-                        event.getId(), date);
+        List<EventStaff> emptySlots = eventStaffRepository
+                .findByEventIdAndEventDateAndStaffIsNull(event.getId(), date);
 
         int slotIndex = 0;
-
         for (String fullName : request.getStaffNames()) {
-            // parse “First Last”
             String[] parts = fullName.trim().split("\\s+");
             if (parts.length < 2) continue;
 
             String first = parts[0], last = parts[1];
-
-            // find the staff entity
-            Staff staff = staffRepository
+            Staff  staff = staffRepository
                     .findByFirstNameIgnoreCaseAndLastNameIgnoreCase(first, last)
                     .orElse(null);
             if (staff == null) continue;
 
-            // skip if already on that date
-            if (eventStaffRepository.existsByStaffIdAndEventDate(
-                    staff.getId(), date)) {
+            // skip if already assigned that day
+            if (eventStaffRepository.existsByStaffIdAndEventDate(staff.getId(), date))
                 continue;
-            }
 
             EventStaff slot;
             if (slotIndex < emptySlots.size()) {
-                // fill an existing empty one
                 slot = emptySlots.get(slotIndex);
             } else {
-                // **no empty slots left** — create a brand-new row
                 slot = new EventStaff();
                 slot.setEvent(event);
                 slot.setEventDate(date);
             }
-
             slot.setStaff(staff);
             slot.setAssignedAt(LocalDateTime.now());
             eventStaffRepository.save(slot);
-
             assignedCount++;
             slotIndex++;
+
+            // --- Send Assignment Notification ---
+            Notification notif = Notification.builder()
+                    .userId(staff.getUserId())              // or staff.getUser().getId()
+                    .title("Assigned to “" + event.getId() + "”")
+                    .message(String.format(
+                            "You’ve been assigned to event '%s' on %s.",
+                            event.getId(), date
+                    ))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationRepository.save(notif);
         }
 
         return new ApiResponse<>(true,
                 assignedCount + " staff assigned successfully",
-                null);
+                null
+        );
     }
 
     @Override
@@ -119,18 +119,37 @@ public class EventStaffServiceImpl implements EventStaffService {
         authorizationHelper.ensureAuthorizationHeader(authHeader);
 
         EventStaff slot = eventStaffRepository.findById(slotId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "Assignment slot not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Assignment slot not found"
+                ));
 
-        // simply clear it
+        Staff staff = slot.getStaff();
+        LocalDate date = slot.getEventDate();
+        Long eventName = slot.getEvent().getId();
+
+        // clear assignment
         slot.setStaff(null);
         slot.setAssignedAt(null);
         eventStaffRepository.save(slot);
 
+        // --- Send Removal Notification ---
+        if (staff != null) {
+            Notification notif = Notification.builder()
+                    .userId(staff.getUserId())
+                    .title("Removed from “" + eventName + "”")
+                    .message(String.format(
+                            "You’ve been removed from event '%s' on %s.",
+                            eventName, date
+                    ))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationRepository.save(notif);
+        }
+
         return new ApiResponse<>(true,
                 "Staff unassigned successfully",
-                null);
+                null
+        );
     }
 
     @Override

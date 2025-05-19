@@ -47,4 +47,11 @@ public class EventController {
             @RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(eventService.getAllEvents(authHeader));
     }
+
+    @GetMapping("/my")
+    public ApiResponse<List<EventDto>> getMyEvents(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        return eventService.getAllEventsForCustomer(authHeader);
+    }
 }

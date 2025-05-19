@@ -23,6 +23,7 @@ public class EventServiceImpl implements EventService {
 
     private static final Logger log = LoggerFactory.getLogger(EventServiceImpl.class);
     private final EventRepository eventRepository;
+    private final AuthorizationHelper  authorizationHelper;
 
     @Override
     public ApiResponse<EventDto> updateAlbumStatus(Long id, AlbumStatus albumStatus, String authHeader) {
@@ -47,5 +48,21 @@ public class EventServiceImpl implements EventService {
                 .map(EventDto::fromEntity)
                 .collect(Collectors.toList());
         return new ApiResponse<>(true, "Fetched all events", events);
+    }
+
+    @Override
+    public ApiResponse<List<EventDto>> getAllEventsForCustomer(String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        Long userId = authorizationHelper.extractUserId(authHeader);
+        List<EventDto> data = eventRepository
+                .findByReservation_UserId(userId)
+                .stream()
+                .map(EventDto::fromEntity)
+                .collect(Collectors.toList());
+
+        return new ApiResponse<>(true,
+                "Fetched events for customer " + userId,
+                data
+        );
     }
 }
