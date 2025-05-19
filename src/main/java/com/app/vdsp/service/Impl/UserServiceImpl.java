@@ -13,6 +13,8 @@ import com.app.vdsp.utils.JWTService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +42,10 @@ public class UserServiceImpl implements UserService {
     private final StaffRoleRepository staffRoleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthorizationHelper authorizationHelper;
+    private final ResetPasswordTokenRepository resetPasswordTokenRepository;
+    private final JavaMailSender javaMailSender; // assuming mail is configured
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, StaffRoleRepository staffRoleRepository, RefreshTokenRepository refreshTokenRepository, AuthorizationHelper authorizationHelper) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, JWTService jwtService, PasswordEncoder passwordEncoder, StaffRepository staffRepository, StaffRoleRepository staffRoleRepository, RefreshTokenRepository refreshTokenRepository, AuthorizationHelper authorizationHelper, ResetPasswordTokenRepository resetPasswordTokenRepository, JavaMailSender javaMailSender) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.jwtService = jwtService;
@@ -49,6 +54,8 @@ public class UserServiceImpl implements UserService {
         this.staffRoleRepository = staffRoleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.authorizationHelper = authorizationHelper;
+        this.resetPasswordTokenRepository = resetPasswordTokenRepository;
+        this.javaMailSender = javaMailSender;
     }
 
     @Override
@@ -267,5 +274,59 @@ public class UserServiceImpl implements UserService {
 
         // return the userId in the data field
         return new ApiResponse<>(true, "Profile updated successfully", userId);
+    }
+
+    @Override
+    public ApiResponse<String> sendResetPasswordEmail(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Email not registered");
+        }
+
+        User user = userOptional.get();
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
+
+        ResetPasswordToken resetToken = ResetPasswordToken.builder()
+                .user(user)
+                .token(token)
+                .expiryDate(expiry)
+                .used(false)
+                .build();
+
+        resetPasswordTokenRepository.save(resetToken);
+
+        String resetLink = "http://yourfrontend.com/reset-password?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Reset Your Password");
+        message.setText("Click here to reset your password: " + resetLink);
+        javaMailSender.send(message);
+
+        return new ApiResponse<>(true, "Reset link sent to your email", null);
+    }
+
+    @Override
+    public ApiResponse<String> resetPassword(String token, String newPassword) {
+        ResetPasswordToken resetToken = resetPasswordTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid token"));
+
+        if (resetToken.isUsed()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token already used");
+        }
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        resetPasswordTokenRepository.save(resetToken);
+
+        return new ApiResponse<>(true, "Password reset successfully", null);
     }
 }

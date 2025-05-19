@@ -23,4 +23,6 @@ public interface UserService {
     ApiResponse<String> logoutUser(String refreshToken);
     ApiResponse<String> refreshAccessToken(String refreshToken);
     ApiResponse<Long> patchOwnProfile(String authHeader, @Valid UserUpdateDto updates);
+    ApiResponse<String> sendResetPasswordEmail(String email);
+    ApiResponse<String> resetPassword(String token, String newPassword);
 }

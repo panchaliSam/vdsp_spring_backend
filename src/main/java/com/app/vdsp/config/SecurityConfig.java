@@ -48,7 +48,9 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/refresh",
                                 "/api/users/logout",
-                                "/api/payment/notify"
+                                "/api/payment/notify",
+                                        "/api/users/forgot-password",
+                                        "/api/users/reset-password"
                                 ).permitAll()
                                 .anyRequest().authenticated()
                 )

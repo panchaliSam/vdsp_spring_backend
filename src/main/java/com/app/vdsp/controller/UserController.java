@@ -98,4 +98,17 @@ public class UserController {
     private boolean isAdminOrOwner(User currentUser, Long targetUserId) {
         return currentUser.getRole() == RoleType.ROLE_ADMIN || currentUser.getId().equals(targetUserId);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody JsonNode request) {
+        String email = request.get("email").asText();
+        return ResponseEntity.ok(userService.sendResetPasswordEmail(email));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody JsonNode request) {
+        String token = request.get("token").asText();
+        String newPassword = request.get("newPassword").asText();
+        return ResponseEntity.ok(userService.resetPassword(token, newPassword));
+    }
 }
