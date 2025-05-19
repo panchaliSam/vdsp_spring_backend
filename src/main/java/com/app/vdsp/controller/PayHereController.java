@@ -60,13 +60,13 @@ public class PayHereController {
     }
 
     @GetMapping("/reservation/{id}/confirmation-letter")
-    public ResponseEntity<byte[]> downloadConfirmationLetter(@PathVariable Long id) {
-        ReservationDocument document = reservationDocumentRepository.findByReservationId(id)
+    public ResponseEntity<ApiResponse<byte[]>> downloadConfirmationLetter(@PathVariable Long id) {
+        ReservationDocument document = reservationDocumentRepository
+                .findByReservationId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
-
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + document.getName() + ".pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(document.getData());
+        byte[] pdf = document.getData();
+        ApiResponse<byte[]> envelope =
+                new ApiResponse<>(true, "Fetched confirmation letter", pdf);
+        return ResponseEntity.ok(envelope);
     }
 }
