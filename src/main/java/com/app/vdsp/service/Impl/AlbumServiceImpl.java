@@ -24,6 +24,11 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public ApiResponse<AlbumDto> createAlbum(AlbumDto dto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+
+        if (dto.getCoverPhoto() == null || dto.getCoverPhoto().isBlank()) {
+            dto.setCoverPhoto("https://placehold.co/600x400");
+        }
+
         Album saved = albumRepository.save(AlbumDto.toEntity(dto));
         return new ApiResponse<>(true, "Album created", AlbumDto.fromEntity(saved));
     }
