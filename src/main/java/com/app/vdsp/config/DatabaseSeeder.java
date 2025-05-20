@@ -49,42 +49,42 @@ public class DatabaseSeeder implements CommandLineRunner {
 //            userRepository.save(adminUser);
 //        }
 
-        // Reservation package seed
-        if (!packageRepository.existsById(1L)) {
-            ReservationPackage samplePackage = ReservationPackage.builder()
-                    .name("Standard Package")
-                    .description("A standard package with basic features.")
-                    .price(new BigDecimal("199.99"))
-                    .build();
-            packageRepository.save(samplePackage);
-        }
-
-        // Album & Images seed
-        if (albumRepository.count() == 0) {
-            Album album = Album.builder()
-                    .name("Nature Photography")
-                    .coverPhoto("nature-cover.jpg")
-                    .build();
-
-            // Save album first to get ID
-            album = albumRepository.save(album);
-
-            Image img1 = Image.builder()
-                    .path("nature1.jpg")
-                    .album(album)
-                    .build();
-
-            Image img2 = Image.builder()
-                    .path("nature2.jpg")
-                    .album(album)
-                    .build();
-
-            Image img3 = Image.builder()
-                    .path("nature3.jpg")
-                    .album(album)
-                    .build();
-
-            imageRepository.saveAll(List.of(img1, img2, img3));
-        }
+//        // Reservation package seed
+//        if (!packageRepository.existsById(1L)) {
+//            ReservationPackage samplePackage = ReservationPackage.builder()
+//                    .name("Standard Package")
+//                    .description("A standard package with basic features.")
+//                    .price(new BigDecimal("199.99"))
+//                    .build();
+//            packageRepository.save(samplePackage);
+//        }
+//
+//        // Album & Images seed
+//        if (albumRepository.count() == 0) {
+//            Album album = Album.builder()
+//                    .name("Nature Photography")
+//                    .coverPhoto("nature-cover.jpg")
+//                    .build();
+//
+//            // Save album first to get ID
+//            album = albumRepository.save(album);
+//
+//            Image img1 = Image.builder()
+//                    .path("nature1.jpg")
+//                    .album(album)
+//                    .build();
+//
+//            Image img2 = Image.builder()
+//                    .path("nature2.jpg")
+//                    .album(album)
+//                    .build();
+//
+//            Image img3 = Image.builder()
+//                    .path("nature3.jpg")
+//                    .album(album)
+//                    .build();
+//
+//            imageRepository.saveAll(List.of(img1, img2, img3));
+//        }
     }
 }
