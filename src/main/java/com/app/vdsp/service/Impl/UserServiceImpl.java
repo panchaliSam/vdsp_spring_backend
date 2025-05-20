@@ -10,6 +10,7 @@ import com.app.vdsp.service.UserService;
 import com.app.vdsp.type.RoleType;
 import com.app.vdsp.type.StaffAssignStatus;
 import com.app.vdsp.utils.JWTService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -277,6 +278,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<String> sendResetPasswordEmail(String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isEmpty()) {
@@ -287,6 +289,8 @@ public class UserServiceImpl implements UserService {
         String token = UUID.randomUUID().toString();
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
 
+        resetPasswordTokenRepository.deleteByUserId(user.getId());
+
         ResetPasswordToken resetToken = ResetPasswordToken.builder()
                 .user(user)
                 .token(token)
@@ -296,7 +300,7 @@ public class UserServiceImpl implements UserService {
 
         resetPasswordTokenRepository.save(resetToken);
 
-        String resetLink = "http://yourfrontend.com/reset-password?token=" + token;
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
