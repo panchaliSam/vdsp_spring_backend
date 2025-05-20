@@ -1,6 +1,7 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.PresignedResponseDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,15 +41,15 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    public List<PresignedResponseDto> generatePresignedUrls(List<String> filenames) {
-        return filenames.stream().map(name -> {
+    public ApiResponse<List<PresignedResponseDto>> generatePresignedUrls(List<String> filenames) {
+        List<PresignedResponseDto> signedUrls = filenames.stream().map(name -> {
             String key = UUID.randomUUID().toString();
             String extension = ".webp";
             String objectKey = key + extension;
 
 
             PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket(bucket)
+                    .bucket("mpcs")
                     .key(objectKey)
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
@@ -65,6 +66,8 @@ public class UploadServiceImpl implements UploadService {
                     cdnHost + "/" + objectKey
             );
         }).collect(Collectors.toList());
+
+        return new ApiResponse<List<PresignedResponseDto>>(true, "Signed URLS", signedUrls);
     }
 }
 

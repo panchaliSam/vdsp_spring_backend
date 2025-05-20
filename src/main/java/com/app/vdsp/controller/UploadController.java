@@ -2,6 +2,7 @@ package com.app.vdsp.controller;
 
 
 import com.app.vdsp.dto.PresignedResponseDto;
+import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.UploadService;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class UploadController {
     }
 
     @PostMapping("/batch")
-    public List<PresignedResponseDto> createPresigned(@RequestBody List<String> filenames) {
+    public ApiResponse<List<PresignedResponseDto>> createPresigned(@RequestBody List<String> filenames) {
         return uploadService.generatePresignedUrls(filenames);
     }
 }
