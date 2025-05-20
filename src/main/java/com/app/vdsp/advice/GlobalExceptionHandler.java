@@ -1,6 +1,7 @@
 package com.app.vdsp.advice;
 
 import com.app.vdsp.entity.ApiResponse;
+import com.app.vdsp.exception.IgnoredException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,5 +27,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAll(Exception ex) {
         ApiResponse<Void> body = new ApiResponse<>(false, ex.getMessage(), null);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    @ExceptionHandler(IgnoredException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIgnored(IgnoredException ex) {
+        ApiResponse<Void> body = new ApiResponse<>(false, ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(body); // Or another non-error status
     }
 }

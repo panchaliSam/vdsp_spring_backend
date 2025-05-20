@@ -5,6 +5,7 @@ import com.app.vdsp.dto.AlbumSummaryDto;
 import com.app.vdsp.entity.Album;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.entity.Event;
+import com.app.vdsp.exception.IgnoredException;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.AlbumRepository;
 import com.app.vdsp.repository.EventRepository;
@@ -104,7 +105,7 @@ public class AlbumServiceImpl implements AlbumService {
         Album album = albumRepository.findAll().stream()
                 .filter(a -> a.getEvent() != null && a.getEvent().getId().equals(eventId))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found for event ID: " + eventId));
+                .orElseThrow(() -> new IgnoredException(""));
         return new ApiResponse<>(true, "Album fetched by event ID", AlbumDto.fromEntity(album));
     }
 }
