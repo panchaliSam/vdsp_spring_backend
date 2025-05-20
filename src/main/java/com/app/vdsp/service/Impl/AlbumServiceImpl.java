@@ -57,8 +57,7 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    public ApiResponse<List<AlbumSummaryDto>> getAllAlbums(String authHeader) {
-        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+    public ApiResponse<List<AlbumSummaryDto>> getAllAlbums() {
         List<AlbumSummaryDto> result = albumRepository.findAll().stream()
                 .map(AlbumSummaryDto::fromEntity)
                 .collect(Collectors.toList());

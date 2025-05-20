@@ -9,7 +9,7 @@ import java.util.List;
 public interface AlbumService {
     ApiResponse<AlbumDto> createAlbum(AlbumDto dto, String authHeader);
     ApiResponse<AlbumDto> getAlbumById(Long id, String authHeader);
-    ApiResponse<List<AlbumSummaryDto>> getAllAlbums(String authHeader);
+    ApiResponse<List<AlbumSummaryDto>> getAllAlbums();
     ApiResponse<AlbumDto> updateAlbum(Long id, AlbumDto dto, String authHeader);
     ApiResponse<String> deleteAlbum(Long id, String authHeader);
     ApiResponse<AlbumDto> getAlbumByEventId(Long eventId, String authHeader);

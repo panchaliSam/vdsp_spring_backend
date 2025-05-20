@@ -34,11 +34,9 @@ public class AlbumController {
         return albumService.getAlbumById(id, authHeader);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping
-    public ApiResponse<List<AlbumSummaryDto>> getAll(
-            @RequestHeader("Authorization") String authHeader) {
-        return albumService.getAllAlbums(authHeader);
+    public ApiResponse<List<AlbumSummaryDto>> getAll() {
+        return albumService.getAllAlbums();
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
