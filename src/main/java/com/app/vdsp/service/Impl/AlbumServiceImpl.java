@@ -53,13 +53,22 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public ApiResponse<AlbumDto> updateAlbum(Long id, AlbumDto dto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found"));
 
-        album.setName(dto.getName());
+        if (dto.getCoverPhoto() == null || dto.getCoverPhoto().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cover photo is required");
+        }
+
+        if (dto.getName() != null && !dto.getName().isBlank()) {
+            album.setName(dto.getName());
+        }
+
         album.setCoverPhoto(dto.getCoverPhoto());
 
-        return new ApiResponse<>(true, "Album updated", AlbumDto.fromEntity(albumRepository.save(album)));
+        Album updated = albumRepository.save(album);
+        return new ApiResponse<>(true, "Album updated", AlbumDto.fromEntity(updated));
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.app.vdsp.dto.AlbumDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.AlbumService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,10 +35,12 @@ public class AlbumController {
         return albumService.getAllAlbums(authHeader);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
-    @PutMapping("/{id}")
-    public ApiResponse<AlbumDto> update(@PathVariable Long id, @RequestBody AlbumDto dto, @RequestHeader("Authorization") String authHeader) {
-        return albumService.updateAlbum(id, dto, authHeader);
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<AlbumDto>> patchAlbum(
+            @PathVariable Long id,
+            @RequestBody AlbumDto dto,
+            @RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(albumService.updateAlbum(id, dto, authHeader));
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
