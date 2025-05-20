@@ -286,10 +286,12 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userOptional.get();
-        String token = UUID.randomUUID().toString();
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
 
         resetPasswordTokenRepository.deleteByUserId(user.getId());
+        resetPasswordTokenRepository.flush();
+
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
 
         ResetPasswordToken resetToken = ResetPasswordToken.builder()
                 .user(user)
