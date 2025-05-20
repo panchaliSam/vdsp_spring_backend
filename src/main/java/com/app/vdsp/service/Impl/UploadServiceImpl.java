@@ -35,8 +35,7 @@ public class UploadServiceImpl implements UploadService {
 
 
     @Autowired
-    public UploadServiceImpl(S3Client s3, S3Presigner p) {
-        //this.s3 = s3;
+    public UploadServiceImpl(S3Presigner p) {
         this.presigner = p;
     }
 
@@ -49,7 +48,7 @@ public class UploadServiceImpl implements UploadService {
 
 
             PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket("mpcs")
+                    .bucket(bucket)
                     .key(objectKey)
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
@@ -67,7 +66,7 @@ public class UploadServiceImpl implements UploadService {
             );
         }).collect(Collectors.toList());
 
-        return new ApiResponse<List<PresignedResponseDto>>(true, "Signed URLS", signedUrls);
+        return new ApiResponse<List<PresignedResponseDto>>(true, "Signed Urls", signedUrls);
     }
 }
 
