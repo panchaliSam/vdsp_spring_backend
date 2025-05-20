@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Image {
 
     @Id
-    @Column(length = 36, updatable = false, nullable = false)
+    @Column(length = 50, updatable = false, nullable = false)
     private String id;
 
     @NotBlank(message = "Image path cannot be blank")
