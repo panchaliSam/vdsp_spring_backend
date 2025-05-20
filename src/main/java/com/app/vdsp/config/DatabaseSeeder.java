@@ -36,18 +36,18 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
 
         // Admin user seed
-        if (!userRepository.existsByEmail("admin@example.com")) {
-            String hashedPassword = passwordEncoder.encode("admin123");
-            User adminUser = User.builder()
-                    .firstName("Admin")
-                    .lastName("User")
-                    .email("admin@example.com")
-                    .password(hashedPassword)
-                    .phoneNumber("1234567890")
-                    .role(RoleType.ROLE_ADMIN)
-                    .build();
-            userRepository.save(adminUser);
-        }
+//        if (!userRepository.existsByEmail("admin@example.com")) {
+//            String hashedPassword = passwordEncoder.encode("admin123");
+//            User adminUser = User.builder()
+//                    .firstName("Admin")
+//                    .lastName("User")
+//                    .email("admin@example.com")
+//                    .password(hashedPassword)
+//                    .phoneNumber("1234567890")
+//                    .role(RoleType.ROLE_ADMIN)
+//                    .build();
+//            userRepository.save(adminUser);
+//        }
 
         // Reservation package seed
         if (!packageRepository.existsById(1L)) {
