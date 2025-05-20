@@ -48,6 +48,15 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllEvents(authHeader));
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
+    @GetMapping("/getAll/{status}")
+    public ResponseEntity<ApiResponse<List<EventDto>>> getAllEventsForStatus(
+            @PathVariable String status,
+            @RequestHeader("Authorization") String authHeader) {
+        AlbumStatus albumStatus = AlbumStatus.valueOf(status.toUpperCase());
+        return ResponseEntity.ok(eventService.getAllEventsForStatus(authHeader,albumStatus));
+    }
+
     @GetMapping("/my")
     public ApiResponse<List<EventDto>> getMyEvents(
             @RequestHeader("Authorization") String authHeader

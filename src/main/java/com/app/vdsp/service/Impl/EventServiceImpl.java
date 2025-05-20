@@ -51,6 +51,18 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public ApiResponse<List<EventDto>> getAllEventsForStatus(String authHeader, AlbumStatus status) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        log.info("Fetching all events for status: {}", status);
+        List<EventDto> events = eventRepository.findAll()
+                .stream()
+                .filter(e -> e.getAlbumStatus() == status)
+                .map(EventDto::fromEntity)
+                .collect(Collectors.toList());
+        return new ApiResponse<>(true, "Fetched all events", events);
+    }
+
+    @Override
     public ApiResponse<List<EventDto>> getAllEventsForCustomer(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Long userId = authorizationHelper.extractUserId(authHeader);

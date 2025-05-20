@@ -9,5 +9,6 @@ import java.util.List;
 public interface EventService {
     ApiResponse<EventDto> updateAlbumStatus(Long id, AlbumStatus albumStatus, String authHeader);
     ApiResponse<List<EventDto>> getAllEvents(String authHeader);
+    ApiResponse<List<EventDto>> getAllEventsForStatus(String authHeader, AlbumStatus status);
     ApiResponse<List<EventDto>> getAllEventsForCustomer(String authHeader);
 }
