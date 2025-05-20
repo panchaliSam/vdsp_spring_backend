@@ -32,6 +32,10 @@ public class Album {
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Image> images;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_id")
+    private Event event;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

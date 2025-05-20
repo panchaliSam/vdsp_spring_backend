@@ -2,11 +2,12 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.AlbumDto;
 import com.app.vdsp.dto.AlbumSummaryDto;
-import com.app.vdsp.dto.ImageDto;
 import com.app.vdsp.entity.Album;
 import com.app.vdsp.entity.ApiResponse;
+import com.app.vdsp.entity.Event;
 import com.app.vdsp.helpers.AuthorizationHelper;
 import com.app.vdsp.repository.AlbumRepository;
+import com.app.vdsp.repository.EventRepository;
 import com.app.vdsp.service.AlbumService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class AlbumServiceImpl implements AlbumService {
 
     private final AlbumRepository albumRepository;
+    private final EventRepository eventRepository;
     private final AuthorizationHelper authorizationHelper;
 
     @Override
@@ -31,9 +33,19 @@ public class AlbumServiceImpl implements AlbumService {
             dto.setCoverPhoto("https://placehold.co/600x400");
         }
 
-        Album saved = albumRepository.save(AlbumDto.toEntity(dto));
+        Event event = null;
+        if (dto.getEventId() != null) {
+            event = eventRepository.findById(dto.getEventId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        }
+
+        Album album = AlbumDto.toEntity(dto);
+        album.setEvent(event);
+
+        Album saved = albumRepository.save(album);
         return new ApiResponse<>(true, "Album created", AlbumDto.fromEntity(saved));
     }
+
 
     @Override
     public ApiResponse<AlbumDto> getAlbumById(Long id, String authHeader) {
@@ -52,7 +64,6 @@ public class AlbumServiceImpl implements AlbumService {
         return new ApiResponse<>(true, "All albums", result);
     }
 
-
     @Override
     public ApiResponse<AlbumDto> updateAlbum(Long id, AlbumDto dto, String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
@@ -70,6 +81,12 @@ public class AlbumServiceImpl implements AlbumService {
 
         album.setCoverPhoto(dto.getCoverPhoto());
 
+        if (dto.getEventId() != null) {
+            Event event = eventRepository.findById(dto.getEventId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+            album.setEvent(event);
+        }
+
         Album updated = albumRepository.save(album);
         return new ApiResponse<>(true, "Album updated", AlbumDto.fromEntity(updated));
     }
@@ -79,5 +96,15 @@ public class AlbumServiceImpl implements AlbumService {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         albumRepository.deleteById(id);
         return new ApiResponse<>(true, "Album deleted", null);
+    }
+
+    @Override
+    public ApiResponse<AlbumDto> getAlbumByEventId(Long eventId, String authHeader) {
+        AuthorizationHelper.ensureAuthorizationHeader(authHeader);
+        Album album = albumRepository.findAll().stream()
+                .filter(a -> a.getEvent() != null && a.getEvent().getId().equals(eventId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found for event ID: " + eventId));
+        return new ApiResponse<>(true, "Album fetched by event ID", AlbumDto.fromEntity(album));
     }
 }

@@ -12,4 +12,5 @@ public interface AlbumService {
     ApiResponse<List<AlbumSummaryDto>> getAllAlbums(String authHeader);
     ApiResponse<AlbumDto> updateAlbum(Long id, AlbumDto dto, String authHeader);
     ApiResponse<String> deleteAlbum(Long id, String authHeader);
+    ApiResponse<AlbumDto> getAlbumByEventId(Long eventId, String authHeader);
 }

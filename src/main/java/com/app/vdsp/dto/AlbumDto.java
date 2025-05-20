@@ -1,6 +1,7 @@
 package com.app.vdsp.dto;
 
 import com.app.vdsp.entity.Album;
+import com.app.vdsp.entity.Event;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class AlbumDto {
+
     private Long id;
     private String name;
     private String coverPhoto;
+    private Long eventId;
     private List<ImageDto> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -24,6 +27,7 @@ public class AlbumDto {
                 .id(album.getId())
                 .name(album.getName())
                 .coverPhoto(album.getCoverPhoto())
+                .eventId(album.getEvent() != null ? album.getEvent().getId() : null)
                 .createdAt(album.getCreatedAt())
                 .updatedAt(album.getUpdatedAt())
                 .images(album.getImages() != null ? album.getImages().stream()
@@ -36,6 +40,7 @@ public class AlbumDto {
         return Album.builder()
                 .name(dto.getName())
                 .coverPhoto(dto.getCoverPhoto())
+                .event(dto.getEventId() != null ? Event.builder().id(dto.getEventId()).build() : null)
                 .build();
     }
 }

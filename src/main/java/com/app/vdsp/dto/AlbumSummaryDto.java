@@ -16,6 +16,7 @@ public class AlbumSummaryDto {
     private Long id;
     private String name;
     private String coverPhoto;
+    private Long eventId;
     private List<String> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -25,12 +26,11 @@ public class AlbumSummaryDto {
                 .id(album.getId())
                 .name(album.getName())
                 .coverPhoto(album.getCoverPhoto())
+                .eventId(album.getEvent() != null ? album.getEvent().getId() : null)
                 .createdAt(album.getCreatedAt())
                 .updatedAt(album.getUpdatedAt())
                 .images(album.getImages() != null
-                        ? album.getImages().stream()
-                        .map(image -> image.getId())
-                        .collect(Collectors.toList())
+                        ? album.getImages().stream().map(img -> img.getId()).collect(Collectors.toList())
                         : null)
                 .build();
     }
