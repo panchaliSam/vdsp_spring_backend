@@ -58,7 +58,7 @@ public class ImageServiceImpl implements ImageService {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
-        image.setPath(dto.getPath());
+
         return new ApiResponse<>(true, "Image updated", ImageDto.fromEntity(imageRepository.save(image)));
     }
 

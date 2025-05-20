@@ -1,6 +1,7 @@
 package com.app.vdsp.controller;
 
 import com.app.vdsp.dto.AlbumDto;
+import com.app.vdsp.dto.AlbumSummaryDto;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.service.AlbumService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class AlbumController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')")
     @GetMapping
-    public ApiResponse<List<AlbumDto>> getAll(@RequestHeader("Authorization") String authHeader) {
+    public ApiResponse<List<AlbumSummaryDto>> getAll(@RequestHeader("Authorization") String authHeader) {
         return albumService.getAllAlbums(authHeader);
     }
 

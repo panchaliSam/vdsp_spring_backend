@@ -3,13 +3,11 @@ package com.app.vdsp.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Entity
@@ -27,6 +25,9 @@ public class Image {
     @NotBlank(message = "Image path cannot be blank")
     @Column(nullable = false)
     private String path;
+
+    @Column(nullable = false)
+    private int orderId = 0;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "album_id")

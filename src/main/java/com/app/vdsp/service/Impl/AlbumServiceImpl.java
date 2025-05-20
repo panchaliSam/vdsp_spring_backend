@@ -1,6 +1,8 @@
 package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.AlbumDto;
+import com.app.vdsp.dto.AlbumSummaryDto;
+import com.app.vdsp.dto.ImageDto;
 import com.app.vdsp.entity.Album;
 import com.app.vdsp.entity.ApiResponse;
 import com.app.vdsp.helpers.AuthorizationHelper;
@@ -42,13 +44,14 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    public ApiResponse<List<AlbumDto>> getAllAlbums(String authHeader) {
+    public ApiResponse<List<AlbumSummaryDto>> getAllAlbums(String authHeader) {
         AuthorizationHelper.ensureAuthorizationHeader(authHeader);
-        List<AlbumDto> result = albumRepository.findAll().stream()
-                .map(AlbumDto::fromEntity)
+        List<AlbumSummaryDto> result = albumRepository.findAll().stream()
+                .map(AlbumSummaryDto::fromEntity)
                 .collect(Collectors.toList());
         return new ApiResponse<>(true, "All albums", result);
     }
+
 
     @Override
     public ApiResponse<AlbumDto> updateAlbum(Long id, AlbumDto dto, String authHeader) {
