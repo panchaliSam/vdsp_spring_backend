@@ -51,3 +51,13 @@ logging:
     org:
       springframework:
         security: DEBUG
+
+DO:
+  SPACES:
+    KEY:      ${DO.SPACES.KEY}
+    SECRET:   ${DO.SPACES.SECRET}
+    REGION:   ${DO.SPACES.REGION}
+    ENDPOINT: ${DO.SPACES.ENDPOINT}
+  CDN:
+    HOST:     ${DO.CDN.HOST}
+    BUCKET:   ${DO.CDN.BUCKET}
