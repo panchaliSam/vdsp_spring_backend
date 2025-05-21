@@ -100,16 +100,18 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             List<ReservationApproval> approvedReservations = reservationApprovalRepository.findByUserId(userId);
             log.info("Approved reservations for user {}: {}", userId, approvedReservations);
 
-            approvedReservations.forEach(approval -> {
-
-
-            });
-
-            List<ReservationApprovalDto> result = approvedReservations.stream()
+            List<ReservationApprovalDto> result = approvedReservations
+                    .stream()
                     .map(reservationApproval -> {
-                        return ReservationApprovalDto.fromEntity(reservationApproval,null);
-                    })
-                    .collect(Collectors.toList());
+                Long rid = reservationApproval.getReservation().getId();
+                Payment p = paymentRepository.findPaymentByReservation_Id(rid);
+                if (p == null) {
+                    return ReservationApprovalDto.fromEntity(reservationApproval, PaymentStatus.PENDING);
+                }else{
+                    return ReservationApprovalDto.fromEntity(reservationApproval,p.getPaymentStatus());
+                }
+
+            }).collect(Collectors.toList());
 
             return new ApiResponse<>(true, "Fetched approved reservations for user", result);
         } catch (ResponseStatusException e) {
