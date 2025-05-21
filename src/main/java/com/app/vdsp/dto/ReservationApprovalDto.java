@@ -4,7 +4,9 @@ import com.app.vdsp.entity.Reservation;
 import com.app.vdsp.entity.ReservationApproval;
 import com.app.vdsp.type.ApprovalStatus;
 import com.app.vdsp.type.EventType;
+import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.type.SessionType;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,7 +59,10 @@ public class ReservationApprovalDto {
     @NotNull(message = "Session type cannot be null")
     private SessionType sessionType;
 
-    public static ReservationApprovalDto fromEntity(ReservationApproval reservationApproval) {
+    @Nullable
+    private PaymentStatus paymentStatus;
+
+    public static ReservationApprovalDto fromEntity(ReservationApproval reservationApproval, @Nullable PaymentStatus paymentStatus) {
         Reservation reservation = reservationApproval.getReservation();
         ApprovalStatus approvalStatus = (reservationApproval.getStatus() == null || !reservationApproval.getStatus())
                 ? ApprovalStatus.PENDING
@@ -76,6 +81,7 @@ public class ReservationApprovalDto {
                 .eventStartTime(reservation.getEventStartTime())
                 .eventEndTime(reservation.getEventEndTime())
                 .sessionType(reservation.getSessionType())
+                .paymentStatus(paymentStatus)
                 .build();
     }
 }

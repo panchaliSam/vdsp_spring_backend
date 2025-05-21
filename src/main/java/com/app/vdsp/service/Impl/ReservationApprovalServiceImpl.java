@@ -2,10 +2,15 @@ package com.app.vdsp.service.Impl;
 
 import com.app.vdsp.dto.ReservationApprovalDto;
 import com.app.vdsp.entity.ApiResponse;
+import com.app.vdsp.entity.Payment;
 import com.app.vdsp.entity.ReservationApproval;
+import com.app.vdsp.repository.PaymentApprovalRepository;
+import com.app.vdsp.repository.PaymentRepository;
 import com.app.vdsp.repository.ReservationApprovalRepository;
+import com.app.vdsp.service.PaymentApprovalService;
 import com.app.vdsp.service.ReservationApprovalService;
 import com.app.vdsp.type.ApprovalStatus;
+import com.app.vdsp.type.PaymentStatus;
 import com.app.vdsp.utils.JWTService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +29,14 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
 
     private final ReservationApprovalRepository reservationApprovalRepository;
     private final JWTService jwtService;
+    private final PaymentRepository paymentRepository;
 
-    public ReservationApprovalServiceImpl(ReservationApprovalRepository reservationApprovalRepository, JWTService jwtService) {
+    public ReservationApprovalServiceImpl(ReservationApprovalRepository reservationApprovalRepository,
+                                          JWTService jwtService,
+                                          PaymentRepository paymentRepository) {
         this.reservationApprovalRepository = reservationApprovalRepository;
         this.jwtService = jwtService;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -37,7 +46,16 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             log.info("Reservation approvals found: {}", reservationApprovals);
 
             List<ReservationApprovalDto> result = reservationApprovals.stream()
-                    .map(ReservationApprovalDto::fromEntity)
+                    .map(reservationApproval -> {
+                        Long rid = reservationApproval.getReservation().getId();
+                        Payment p = paymentRepository.findPaymentByReservation_Id(rid);
+                        if (p == null) {
+                            return ReservationApprovalDto.fromEntity(reservationApproval, PaymentStatus.PENDING);
+                        }else{
+                            return ReservationApprovalDto.fromEntity(reservationApproval,p.getPaymentStatus());
+                        }
+
+                    })
                     .collect(Collectors.toList());
 
             return new ApiResponse<>(true, "Fetched all reservation approvals", result);
@@ -60,7 +78,8 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             ReservationApproval updatedApproval = reservationApprovalRepository.save(reservationApproval);
             log.info("Reservation approval updated: {}", updatedApproval);
 
-            return new ApiResponse<>(true, "Reservation approval status updated", ReservationApprovalDto.fromEntity(updatedApproval));
+
+            return new ApiResponse<>(true, "Reservation approval status updated", ReservationApprovalDto.fromEntity(updatedApproval,null));
         } catch (Exception e) {
             log.error("Error while updating reservation approval status", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -81,8 +100,15 @@ public class ReservationApprovalServiceImpl implements ReservationApprovalServic
             List<ReservationApproval> approvedReservations = reservationApprovalRepository.findByUserId(userId);
             log.info("Approved reservations for user {}: {}", userId, approvedReservations);
 
+            approvedReservations.forEach(approval -> {
+
+
+            });
+
             List<ReservationApprovalDto> result = approvedReservations.stream()
-                    .map(ReservationApprovalDto::fromEntity)
+                    .map(reservationApproval -> {
+                        return ReservationApprovalDto.fromEntity(reservationApproval,null);
+                    })
                     .collect(Collectors.toList());
 
             return new ApiResponse<>(true, "Fetched approved reservations for user", result);
