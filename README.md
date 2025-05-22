@@ -80,40 +80,72 @@ LensLex is a full-stack event management solution tailored for photography studi
 
 ## 🗂 Folder Structure Summary
 
-### 🔹 Backend (Spring Boot)
+## Folder Structure
 
-vdsp_spring_backend/
-├── src/
-│   └── main/java/com/app/vdsp/
-│       ├── advice/
-│       ├── config/
-│       ├── controller/
-│       ├── dto/
-│       ├── entity/
-│       ├── exception/
-│       ├── filter/
-│       ├── helpers/
-│       ├── repository/
-│       ├── service/
-│       ├── type/
-│       └── utils/
-└── VdspApplication.java
+### vdsp_spring_backend
+- .gradle/
+- .idea/
+- build/
+- gradle/
+- src/
+    - main/
+        - java/
+            - com/
+                - app/
+                    - vdsp/
+                        - advice/
+                        - config/
+                        - controller/
+                        - dto/
+                        - entity/
+                        - exception/
+                        - filter/
+                        - helpers/
+                        - repository/
+                        - service/
+                        - type/
+                        - utils/
+                        - VdspApplication.java
+        - resources/
+    - test/
+- .env
+- .gitignore
+- build.gradle
+- gradlew
+- gradlew.bat
 
-### 🔹 Frontend (React + Vite)
-
-VDSP_FRONTEND/
-├── src/
-│   ├── api/
-│   ├── assets/
-│   ├── components/
-│   ├── context/
-│   ├── helper/
-│   ├── interfaces/
-│   ├── pages/
-│   ├── routes/
-│   └── utils/
-
----
+### VDSP_FRONTEND
+- .vite/
+- node_modules/
+- public/
+- src/
+    - api/
+    - assets/
+    - components/
+    - context/
+    - helper/
+    - interfaces/
+    - pages/
+    - routes/
+    - utils/
+    - App.css
+    - App.tsx
+    - index.css
+    - main.tsx
+    - vite-env.d.ts
+- .env
+- .gitignore
+- client.code-workspace
+- eslint.config.js
+- index.html
+- LICENSE
+- package.json
+- package-lock.json
+- README.md
+- tsconfig.app.json
+- tsconfig.json
+- tsconfig.node.json
+- vite.config.ts
 
 ## 🛠 Setup Instructions
 
